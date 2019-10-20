@@ -6,7 +6,7 @@ import csv
 import re
 import pandas as pd
 # Starting with just opening one file
-f = open('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Tee', 'r', encoding='UTF-8')
+f = open('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Mundhada_H_2017', 'r', encoding='UTF-8')
 
 csv_f = csv.reader(f)
 
@@ -28,11 +28,30 @@ stors = []
 j = 0
 while j < len(data):
     data[j].insert(4,"")
-    if data[j][2] == "SNP":
-        temp = data[j][3]
+    data[j].insert(2,"")
+    if data[j][3] == "SNP":
+        temp = data[j][4]
         splitter = re.split("→", temp)
-        data[j][3] = splitter[0]
-        data[j][4] = splitter[1]
+        data[j][4] = splitter[0]
+        data[j][5] = splitter[1]
+        data[j][2] = int(data[j][1].replace(',', "")) + 1
+    if data[j][3] == "DEL":
+        if data[j][4][0] == "Δ":
+            temp = re.split('Δ',data[j][4])
+            newtemp = re.split(" ", temp[1])
+            print(temp)
+            data[j][2] = int(data[j][1].replace(",","")) + int(newtemp[0].replace(",",""))
+            data[j][4] = ""
+            data[j][5] = ""
+    if data[j][3] == "INS":
+        data[j][5] = re.split("[+]",data[j][4])[1]
+        data[j][4] = ""
+        data[j][2] = int(data[j][1].replace(',',"")) + len(data[j][5])
+    if data[j][3] == "MOB":
+        temp = re.split(" [+]", data[j][4])
+        data[j][4] = ""
+        data[j][5] = temp[0]
+        data[j][2] = int(data[j][1].replace(",","")) + int(temp[1].split(" ")[0])
     j += 1
 # Loop to do multiple mutations per line
 j = 0
@@ -41,7 +60,7 @@ while j < len(data):
     k = len(header) + 1
     while o < k :
         if data[j][o] == "1.00":
-            stors.append([data[j][0],data[j][1],data[j][2],data[j][3],data[j][4],data[j][5],data[j][6].split(' ')[0],str(Groups[o-7]).split(" ")[0][3:],str(Groups[o-7]).split(" ")[2][1:], "", "", "",""])
+            stors.append([data[j][0],data[j][1].replace(",",""),data[j][2],data[j][3],data[j][4],data[j][5],data[j][6], data[j][7].split(' ')[0],str(Groups[o-7]).split(" ")[0][3:],str(Groups[o-7]).split(" ")[2][1:], "", "", "",""])
             o+=1
         else:
             o+=1
@@ -49,13 +68,13 @@ while j < len(data):
 # Final loop to clean up last columns
 j = 0
 while j < len(stors):
-    if stors[j][6] == "coding":
-        stors[j][6] = ""
-    elif stors[j][6] == "intergenic":
-        stors[j][5] = "NA"
-        stors[j][6] = ""
+    if stors[j][7] == "coding":
+        stors[j][7] = ""
+    elif stors[j][7] == "intergenic":
+        stors[j][6] = "NA"
+        stors[j][7] = ""
     j += 1
-df = pd.DataFrame(stors, columns = ["CHROM", "POS", 'TYPE', 'REF', 'ALT', 'GEN', '∆AA', 'POP', 'CLON', 'TIME', 'FREQ', 'COM', "Measure of Time"])
+df = pd.DataFrame(stors, columns = ["CHROM", "START POS", "END POS", 'TYPE', 'REF', 'ALT', 'GEN', '∆AA', 'POP', 'CLON', 'TIME', 'FREQ', 'COM', "Measure of Time"])
 print(df)
-df.to_excel('output7.xlsx', index = False)
+df.to_excel('output8.xlsx', index = False)
 f.close()
