@@ -6,7 +6,7 @@ import csv
 import re
 import pandas as pd
 # Starting with just opening one file
-f = open('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Mundhada_H_2017', 'r', encoding='UTF-8')
+f = open('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Tee', 'r', encoding='UTF-8')
 
 csv_f = csv.reader(f)
 
@@ -39,14 +39,14 @@ while j < len(data):
         if data[j][4][0] == "Δ":
             temp = re.split('Δ',data[j][4])
             newtemp = re.split(" ", temp[1])
-            print(temp)
             data[j][2] = int(data[j][1].replace(",","")) + int(newtemp[0].replace(",",""))
             data[j][4] = ""
             data[j][5] = ""
     if data[j][3] == "INS":
-        data[j][5] = re.split("[+]",data[j][4])[1]
-        data[j][4] = ""
-        data[j][2] = int(data[j][1].replace(',',"")) + len(data[j][5])
+            if data[j][4][0] == "+":
+                data[j][5] = re.split("[+]",data[j][4])[1]
+                data[j][4] = ""
+                data[j][2] = int(data[j][1].replace(',',"")) + len(data[j][5])
     if data[j][3] == "MOB":
         temp = re.split(" [+]", data[j][4])
         data[j][4] = ""
@@ -72,6 +72,9 @@ while j < len(stors):
         stors[j][7] = ""
     elif stors[j][7] == "intergenic":
         stors[j][6] = "NA"
+        stors[j][7] = ""
+    elif (stors[j][3] == "DEL") and (stors[j][7]!= ""):
+        stors[j][12] = stors[j][7]
         stors[j][7] = ""
     j += 1
 df = pd.DataFrame(stors, columns = ["CHROM", "START POS", "END POS", 'TYPE', 'REF', 'ALT', 'GEN', '∆AA', 'POP', 'CLON', 'TIME', 'FREQ', 'COM', "Measure of Time"])
