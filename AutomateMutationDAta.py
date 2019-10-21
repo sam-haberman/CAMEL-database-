@@ -5,6 +5,7 @@
 import csv
 import re
 import pandas as pd
+
 # Starting with just opening one file
 f = open('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Tee', 'r', encoding='UTF-8')
 
