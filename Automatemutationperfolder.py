@@ -52,6 +52,12 @@ def mutationtransfer(csvfile):
                 data[j][5] = re.split("[+]", data[j][4])[1]
                 data[j][4] = ""
                 data[j][2] = int(data[j][1].replace(',', "")) + len(data[j][5])
+            else:
+                valuesplit = re.split("→", re.split("[(]|[)]", data[j][4])[2])
+                vali = int(valuesplit[1]) - int(valuesplit[0])
+                data[j][5] = re.split("[(]|[)]", data[j][4])[1] * vali
+                data[j][4] = ""
+                data[j][2] = int(data[j][1].replace(',', "")) + len(data[j][5]) * vali
         if data[j][3] == "MOB":
             temp = re.split(" [+]", data[j][4])
             data[j][4] = ""
