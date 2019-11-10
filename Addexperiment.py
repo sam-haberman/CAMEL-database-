@@ -1,26 +1,22 @@
 import requests as req
 import pandas as pd
 import numpy as np
-#first we pull data from our excel file
-df = pd.read_excel('C:/Users/samue/Desktop/Thesis/metadatatemplate.xlsx', skiprows= 4)
+# first we pull data from our excel file
+df = pd.read_excel('C:/Users/samue/Desktop/Thesis/metadatatemplate.xlsx', skiprows=4)
 df = df.fillna("")
-print(df)
-print(df['NAME'][0])
-
+# Take each value that was included as part of the metadata and is not left blank
 val = df.loc[0,:].values.tolist()
-print(val)
-#Create every dictionary in fields
-start = 1
 
-#Create fields dictionary
+
+# Create fields dictionary
 start = 1
 fielddict = {}
 counter = 1
 while start < len(val)-3:
     if val[start] != '':
         fielddict[str(start)] = {'new_' + str(counter): val[start]}
-        counter +=1
-    start +=1
+        counter += 1
+    start += 1
 print(fielddict)
 
 
@@ -63,7 +59,6 @@ the JSON format like a GET request would return
 Field values key/value pairs that do not have a generated ID yet, use a
 random id that is prefixed with 'new_'.
 '''
-
 
 
 new_experiment = {
