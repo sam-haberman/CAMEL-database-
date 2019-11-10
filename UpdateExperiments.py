@@ -78,14 +78,16 @@ while start < len(val)-3:
     start += 1
 
 # Create reference dictionary depending on if/what reference parts need to be updated.
+# Can make a loop if fields get larger
 refdict = {}
-j = 0
-for i in val[-3:]:
-    if i !=
+if val[-2] != "":
+    refdict['pubmed_id'] = val[-2]
+if val[-1] != "":
+    refdict['url'] = val[-1]
 
 # Check to see if reference section needs to be updated as well,
 # needs to change if we add more reference columns to metadata
-if val[-1] != "" or val[-2] != "" or val[-3] != "":
+if val[-1] != "" or val[-2]:
     update_experiment = {
         'fields': update_dict,
         'references': [refdict]
@@ -94,11 +96,6 @@ if val[-1] != "" or val[-2] != "" or val[-3] != "":
 else:
     update_experiment = {
         'fields': update_dict
-        # '1': {
-        #     species_value_ids[0]: 'We update this species',
-        #     species_value_ids[1]: {'action': 'delete'},  # we delete the second value
-        #     'new_1': 'Adding yet another species'
-        # }
     }
 
 
