@@ -1,4 +1,6 @@
 import requests as req
+# Thomas' example script that gives an example of how to add update and delete experiments as well as add
+# or remove new fields that I am using as a base to create automated versions based on data templates received.
 
 '''
 This is a simple script to demonstrate the editting API 

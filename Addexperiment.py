@@ -5,7 +5,7 @@ import numpy as np
 df = pd.read_excel('C:/Users/samue/Desktop/Thesis/metadatatemplate.xlsx', skiprows=4)
 df = df.fillna("")
 # Take each value that was included as part of the metadata and is not left blank
-val = df.loc[0,:].values.tolist()
+val = df.loc[0, :].values.tolist()
 
 
 # Create fields dictionary

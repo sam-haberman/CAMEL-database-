@@ -1,5 +1,6 @@
 import requests as req
-#Thomas' script to refer to how the api works
+import pandas as pd
+# Thomas' script as a guide to refer to how the api works
 '''
 This is a simple script to demonstrate the editing API 
 of CAMEL. If you run it one line at a time, you can see
@@ -17,6 +18,12 @@ removing an experiment will also delete its field data. Orphan references
 (references that are not linked to any experiment anymore) are
 automatically removed as well.
 '''
+# first we pull data from our excel file
+df = pd.read_excel('C:/Users/samue/Desktop/Thesis/metadatatemplate.xlsx', skiprows=4)
+df = df.fillna("")
+# Take each value that was included as part of the metadata and is not left blank
+val = df.loc[0, :].values.tolist()
+
 # URLS
 
 base_url = "https://cameldatabase.com/CAMEL/"
@@ -48,7 +55,8 @@ token = auth_request.headers['AuthToken']
 auth_header = {'AuthToken': token}
 
 #WE need to know the id of the experiment that we want to update
-
+# This should be given by the people who provide the information that needs to be updated or else we need to search for it in the
+# database
 exp_id = ""
 
 added_exp__url = exp_url + "/" + str(exp_id)
@@ -59,15 +67,39 @@ added_experiment = req.get(added_exp__url).json()
 # Lets update the Species field. We only need the changing fields and the ids of their values.
 species_value_ids = list(added_experiment['fields']['1'].keys())
 
-update_experiment = {
-    'fields': {
-        '1': {
-            species_value_ids[0]: 'We update this species',
-            species_value_ids[1]: {'action': 'delete'},  # we delete the second value
-            'new_1': 'Adding yet another species'
-        }
+# Create fields dictionary
+start = 1
+update_dict = {}
+counter = 1
+while start < len(val)-3:
+    if val[start] != '':
+        update_dict[str(start)] = {added_experiment['fields'][start].keys(): val[start]}
+        counter += 1
+    start += 1
+
+# Create reference dictionary depending on if/what reference parts need to be updated.
+refdict = {}
+j = 0
+for i in val[-3:]:
+    if i !=
+
+# Check to see if reference section needs to be updated as well,
+# needs to change if we add more reference columns to metadata
+if val[-1] != "" or val[-2] != "" or val[-3] != "":
+    update_experiment = {
+        'fields': update_dict,
+        'references': [refdict]
     }
-}
+
+else:
+    update_experiment = {
+        'fields': update_dict
+        # '1': {
+        #     species_value_ids[0]: 'We update this species',
+        #     species_value_ids[1]: {'action': 'delete'},  # we delete the second value
+        #     'new_1': 'Adding yet another species'
+        # }
+    }
 
 
 # Send the updates
