@@ -59,21 +59,21 @@ while j < len(data):
             data[j][5] = ""
             data[j][4] = ""
             data[j][2] = int(data[j][1].replace(',', "")) + len(re.split("[(]|[)]", data[j][4])[1]) * vali
-    # If the mutation is type INS then if this starts with a + we find out how many bases are added and adjust the
-    # end position accordingly by adding that number to the start position
+    # If the mutation is type INS then if this starts with a + we find out how many bases are inserted and put them in
+    # ALT and adjust the end position accordingly by adding one to the start position
     if data[j][3] == "INS":
         if data[j][4][0] == "+":
             data[j][5] = re.split("[+]", data[j][4])[1]
             data[j][4] = ""
-            data[j][2] = int(data[j][1].replace(',', "")) + len(data[j][5])
-        # If another format is used for INS then we do the same thing to see how many bases were inserted
-        # and adding that length to the start position
+            data[j][2] = int(data[j][1].replace(',', "")) + 1
+        # If another format is used for INS then we do the same thing to see how many bases were inserted and add them
+        # or the Insertion sequence identifier to ALT and adjust the end by adding one to the start position
         else:
             valuesplit = re.split("→", re.split("[(]|[)]", data[j][4])[2])
             vali = int(valuesplit[1]) - int(valuesplit[0])
             data[j][5] = re.split("[(]|[)]", data[j][4])[1] * vali
             data[j][4] = ""
-            data[j][2] = int(data[j][1].replace(',', "")) + len(data[j][5]) * vali
+            data[j][2] = int(data[j][1].replace(',', "")) + 1
     # If our mutation is type MOB then we parse the data to see how many bp were added and show what Insertion
     # sequence was added and how many bp it was
     if data[j][3] == "MOB":
