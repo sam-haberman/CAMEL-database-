@@ -60,17 +60,17 @@ def mutationtransfer(csvfile):
             # them to see what our end position is
             else:
                 valuesplit = re.split("→", re.split("[(]|[)]", data[j][4])[2])
-                vali = int(valuesplit[1]) - int(valuesplit[0])
+                vali = int(valuesplit[0]) - int(valuesplit[1])
                 data[j][5] = ""
                 data[j][4] = ""
-                data[j][2] = int(data[j][1].replace(',', "")) + len(re.split("[(]|[)]", data[j][4])[1])*vali
+                data[j][2] = int(data[j][1].replace(',', "")) + vali
         # If the mutation is type INS then if this starts with a + we find out how many bases are added and adjust the
         # end position accordingly by adding that number to the start position
         if data[j][3] == "INS":
             if data[j][4][0] == "+":
                 data[j][5] = re.split("[+]", data[j][4])[1]
                 data[j][4] = ""
-                data[j][2] = int(data[j][1].replace(',', "")) + len(data[j][5])
+                data[j][2] = int(data[j][1].replace(',', "")) + 1
             # If another format is used for INS then we do the same thing to see how many bases were inserted
             # and adding that length to the start position
             else:
@@ -78,14 +78,30 @@ def mutationtransfer(csvfile):
                 vali = int(valuesplit[1]) - int(valuesplit[0])
                 data[j][5] = re.split("[(]|[)]", data[j][4])[1] * vali
                 data[j][4] = ""
-                data[j][2] = int(data[j][1].replace(',', "")) + len(data[j][5]) * vali
+                data[j][2] = int(data[j][1].replace(',', "")) + 1
         # If our mutation is type MOB then we parse the data to see how many bp were added and show what Insertion
-        # sequence was added and how many bp it was
+        # sequence was added and how many bp it was, this is for the normal case of mobility
         if data[j][3] == "MOB":
-            temp = re.split(" [+]", data[j][4])
+            if data[j][4][0] == "I":
+                temp = re.split(" [+]", data[j][4])
+                data[j][4] = ""
+                data[j][5] = temp[0]
+                data[j][2] = int(data[j][1].replace(",", "")) + 1
+            else:
+                # For special case of mobility such as 	Δ2 bp :: IS186 (+) +9 bp we are treating as insertion of IS186
+                data[j][3] = "INS"
+                data[j][5] = re.split(" ", data[j][4])[3]
+                data[j][4] = ""
+                data[j][2] = int(data[j][1].replace(',', "")) + 1
+        # If our mutation is type AMP than we update the name of Amplification to the number of times it is amplified
+        # we also put in alt the length of the amplification
+        if data[j][3] == "AMP":
+            ampsplit = re.split(" ", data[j][4])
+            data[j][3] = "AMP" + str(ampsplit[3])
             data[j][4] = ""
-            data[j][5] = temp[0]
-            data[j][2] = int(data[j][1].replace(",", "")) + int(temp[1].split(" ")[0])
+            data[j][5] = ampsplit[0]
+            data[j][2] = int(data[j][1].replace(",", "")) + 1
+            data[j][7] = ""
         j += 1
     # Loop to do multiple mutations per line
     j = 0
