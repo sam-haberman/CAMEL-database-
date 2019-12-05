@@ -1,6 +1,9 @@
 import requests as req
 import pandas as pd
 # Thomas' script as a guide to refer to how the api works
+# This script will update experiments by saving the experiment number it originated as, deleting the experiment
+# and re-adding the experiment with the old experiment number
+# Not the current goal to use this script and to instead use addexperiment for updating and adding
 '''
 This is a simple script to demonstrate the editing API 
 of CAMEL. If you run it one line at a time, you can see
