@@ -106,16 +106,16 @@ def mutationtransfer(csvfile):
     # Loop to do multiple mutations per line
     j = 0
     # This loop checks each row of the Ale Db CSV data and sees how many experiment replicates this mutation occured in
-    # creating a new mutation for each replicate it occurred in
+    # creating a new mutation for each replicate it occurred in as well as
     while j < len(data):
         o = 7
         k = len(header) + 1
         while o < k:
-            if data[j][o] == "1.00":
+            if data[j][o] != "":
                 stors.append(
                     [data[j][0], data[j][1].replace(",", ""), data[j][2], data[j][3], data[j][4], data[j][5], data[j][6],
                      data[j][7].split(' ')[0], str(Groups[o - 7]).split(" ")[0][3:], str(Groups[o - 7]).split(" ")[2][1:],
-                     "", "", "", ""])
+                     str(Groups[o - 7]).split(" ")[1][1:], data[j][o], "", "Flask"])
                 o += 1
             else:
                 o += 1

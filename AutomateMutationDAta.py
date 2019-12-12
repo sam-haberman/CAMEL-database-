@@ -106,11 +106,12 @@ def mutTranslate(csvfile):
         o = 7
         k = len(header) + 1
         while o < k:
-            if data[j][o] == "1.00":
+            if data[j][o] != "":
                 stors.append(
                     [data[j][0], data[j][1].replace(",", ""), data[j][2], data[j][3], data[j][4], data[j][5], data[j][6],
                      data[j][7].split(' ')[0], str(Groups[o - 7]).split(" ")[0][3:], str(Groups[o - 7]).split(" ")[2][1:],
-                     "", "", "", ""])
+                     str(Groups[o - 7]).split(" ")[1][1:], data[j][o], "", "Flask"])
+                print(str(Groups[o - 7]).split(" ")[2])
                 o += 1
             else:
                 o += 1
