@@ -137,4 +137,4 @@ def mutTranslate(csvfile):
     df.to_excel("fname" + '.xlsx', index=False)
     f.close()
 
-mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Tee')
+mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/mutations.csv')
