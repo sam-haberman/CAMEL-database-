@@ -100,18 +100,17 @@ def mutTranslate(csvfile):
         j += 1
     # Loop to do multiple mutations per line
     j = 0
-    # This loop checks each row of the Ale Db CSV data and sees how many experiment replicates this mutation occured in
+    # This loop checks each row of the Ale Db CSV data and sees how many experiment replicates this mutation occurred in
     # creating a new mutation for each replicate it occurred in
     while j < len(data):
-        o = 7
+        o = 8
         k = len(header) + 1
         while o < k:
             if data[j][o] != "":
                 stors.append(
                     [data[j][0], data[j][1].replace(",", ""), data[j][2], data[j][3], data[j][4], data[j][5], data[j][6],
                      data[j][7].split(' ')[0], str(Groups[o - 7]).split(" ")[0][3:], str(Groups[o - 7]).split(" ")[2][1:],
-                     str(Groups[o - 7]).split(" ")[1][1:], data[j][o], "", "Flask"])
-                print(str(Groups[o - 7]).split(" ")[2])
+                     str(Groups[o - 7]).split(" ")[1][1:], data[j][o], data[j][7],""])
                 o += 1
             else:
                 o += 1
@@ -126,15 +125,15 @@ def mutTranslate(csvfile):
             stors[j][6] = "NA"
             stors[j][7] = ""
         elif (stors[j][3] == "DEL") and (stors[j][7] != ""):
-            stors[j][12] = stors[j][7]
             stors[j][7] = ""
         j += 1
     # This creates a data frame with the given columns and the fullly converted mutation data
     df = pd.DataFrame(stors,
                       columns=["CHROM", "START POS", "END POS", 'TYPE', 'REF', 'ALT', 'GEN', '∆AA', 'POP', 'CLON', 'TIME',
-                               'FREQ', 'COM', "Measure of Time"])
+                               'FREQ', 'COM', "Measure of Time(Flask)"])
     # print(df)
-    df.to_excel("fname" + '.xlsx', index=False)
+    df.to_excel("test_Tee" + '.xlsx', index=False)
     f.close()
 
-mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/mutations.csv')
+
+mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Tee')
