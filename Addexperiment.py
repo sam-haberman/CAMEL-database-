@@ -4,12 +4,26 @@ import pandas as pd
 # Create function to pull all data from excel file, log in and add experiment with or without a given experiment id
 
 
-def get_data_and_add_experiment(file,eid):
+def get_data_and_add_experiment(file,eid=""):
 
     df = pd.read_excel(file, skiprows=4)
     df = df.fillna("")
     # Take each value that was included as part of the metadata and is not left blank
     val = df.loc[0, :].values.tolist()
+    # Convert data to proper type for updating to database
+    integer_fields = [3, 16, 17, 25, 27, 28, 29, 32, 33]
+    bool_fields = [8, 10, 12, 14, 19, 23, 40]
+    double_fields = [30]
+    entry = 0
+    while entry < len(val):
+        if val[entry] != "":
+            if entry in integer_fields:
+                val[entry] = int(val[entry])
+            elif entry in bool_fields:
+                val[entry] = bool(val[entry])
+            elif entry in double_fields:
+                val[entry] = float(val[entry])
+        entry += 1
     # Create fields dictionary
     start = 1
     fielddict = {}
@@ -19,7 +33,7 @@ def get_data_and_add_experiment(file,eid):
             fielddict[str(start)] = {'new_' + str(counter): val[start]}
             counter += 1
         start += 1
-
+    print(fielddict)
     # Add a new experiment
     '''
     Adding or updating an element needs a dict that mimics
@@ -59,22 +73,6 @@ def get_data_and_add_experiment(file,eid):
         'name': df["NAME"][0],  # the only required attribute
         # key value pairs with field id as key
         'fields': fielddict,
-        #     {
-        #     '1': {
-        #         'new_1': "My new species",
-        #         'new_2': "Another new species"
-        #     },
-        #     '2': {
-        #         'new_3': "The goal of this experiment"
-        #     },
-        #     '34': {
-        #         'new_4': "The major outcome of this experiment can be described here"
-        #     },
-        #     '10': {
-        #         'new_5': 0  # no, there is NO changing environment
-        #     }
-        # },
-        # list of linked references
         'references': [
             # {
             #     # By default, references need a reference ID and the complete reference data
@@ -102,11 +100,12 @@ def get_data_and_add_experiment(file,eid):
     # The JSON answer will be the same experiment, but with an assigned ID
     if eid == "":
         answer = req.post(exp_url, headers=auth_header, json=new_experiment).json()
+        print(answer)
         exp_id = answer['id']
         added_exp__url = exp_url + "/" + str(exp_id)
-    else:
-        exp_id = eid
-        added_exp__url = exp_url + "/" + str(exp_id)
+    # else:
+    #     exp_id = eid
+    #     added_exp__url = exp_url + "/" + str(exp_id)
 
     # Field value id's will not be assigned yet, until we request the complete object again
     added_experiment = req.get(added_exp__url).json()
@@ -147,4 +146,4 @@ def remove_experiment(eid):
 
 #remove_experiment(id)
 # Have to give file with experiment information and either leave id blank or give a number
-get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplate.xlsx',)
+get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',)

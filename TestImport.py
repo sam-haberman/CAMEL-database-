@@ -150,6 +150,7 @@ new_field = {
     }
 
 answer = req.post(field_url, headers=auth_header, json=new_field).json()
+print(answer)
 field_id = answer['id']
 added_field_url = field_url + '/' + str(field_id)
 
