@@ -34,6 +34,12 @@ def get_data_and_add_experiment(file,eid=""):
             counter += 1
         start += 1
     print(fielddict)
+
+    #Get Reference information
+    pubmed_id = val[-2]
+    if pubmed_id == "":
+        pubmed_id = None
+    pubmed_url = val[-1]
     # Add a new experiment
     '''
     Adding or updating an element needs a dict that mimics
@@ -89,8 +95,8 @@ def get_data_and_add_experiment(file,eid=""):
                 'journal': 'Journal Abbr.',
                 'year': '2019',
                 'pages': '',
-                'pubmed_id': val[-2],
-                'url': val[-1]
+                'pubmed_id': pubmed_id,
+                'url': pubmed_url
             }
         ]
     }
@@ -106,6 +112,7 @@ def get_data_and_add_experiment(file,eid=""):
     # else:
     #     exp_id = eid
     #     added_exp__url = exp_url + "/" + str(exp_id)
+    #     req.post(added_exp__url, headers=auth_header, json=new_experiment).json()
 
     # Field value id's will not be assigned yet, until we request the complete object again
     added_experiment = req.get(added_exp__url).json()
@@ -144,6 +151,6 @@ def remove_experiment(eid):
     added_exp_url = exp_url + '/' + str(exp_id)
     req.delete(added_exp_url, headers=auth_header)
 
-#remove_experiment(id)
+#remove_experiment(756)
 # Have to give file with experiment information and either leave id blank or give a number
-get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',)
+#get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',)
