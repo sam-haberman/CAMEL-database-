@@ -1,6 +1,7 @@
 import requests as req
 import pandas as pd
-
+import glob
+path = ""
 # Create function to pull all data from excel file, log in and add experiment with or without a given experiment id
 
 
@@ -154,3 +155,7 @@ def remove_experiment(eid):
 #remove_experiment(756)
 # Have to give file with experiment information and either leave id blank or give a number
 #get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',)
+
+# Adding experiments from a folder rather than individually
+#  for fname in glob.glob(path):
+#     get_data_and_add_experiment(fname,)

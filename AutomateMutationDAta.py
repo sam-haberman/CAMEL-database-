@@ -5,6 +5,8 @@
 import csv
 import re
 import pandas as pd
+import glob
+path = ""
 
 def mutTranslate(csvfile):
     # Open each csvfile
@@ -137,3 +139,6 @@ def mutTranslate(csvfile):
 
 
 mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Tee')
+# Goes through every file in the folder and runs our function to convert the CSV file into our template
+# for fname in glob.glob(path):
+#     mutationtransfer(fname)
