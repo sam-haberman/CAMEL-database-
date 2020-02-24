@@ -1,17 +1,22 @@
 import requests as req
 import pandas as pd
+import re
 import glob
 path = ""
 # Create function to pull all data from excel file, log in and add experiment with or without a given experiment id
 # Also includes function to attach mutation data to an experiment
 
-def get_data_and_add_experiment(file,eid=""):
+
+# If there are multiple entries for a field, such as having multiple species in the experiment, these entries need to
+# be separated by a comma in the excel template file in order for them to be properly added
+
+def get_data_and_add_experiment(file, eid=""):
 
     df = pd.read_excel(file, skiprows=4)
     df = df.fillna("")
     # Take each value that was included as part of the metadata and is not left blank
     val = df.loc[0, :].values.tolist()
-    # Convert data to proper type for updating to database
+    # Convert data to proper type for updating to database (making everything JSON serializable)
     integer_fields = [3, 16, 17, 25, 27, 28, 29, 32, 33]
     bool_fields = [8, 10, 12, 14, 19, 23, 40]
     double_fields = [30]
@@ -25,18 +30,26 @@ def get_data_and_add_experiment(file,eid=""):
             elif entry in double_fields:
                 val[entry] = float(val[entry])
         entry += 1
-    # Create fields dictionary
+
+    # Create fields dictionary and check for multiple entries by looking for a comma
     start = 1
     fielddict = {}
     counter = 1
     while start < len(val)-3:
         if val[start] != '':
-            fielddict[str(start)] = {'new_' + str(counter): val[start]}
-            counter += 1
+            fielddict[str(start)] = {}
+            if isinstance(val[start], str):
+                comma_check = re.split(",", val[start])
+                for element in comma_check:
+                    fielddict[str(start)]['new_' + str(counter)] = element
+                    counter += 1
+            else:
+                fielddict[str(start)] = {'new_' + str(counter): val[start]}
+                counter += 1
         start += 1
-    # print(fielddict)
+    print(fielddict)
 
-    #Get Reference information
+    # Get Reference information
     pubmed_id = val[-2]
     if pubmed_id == "":
         pubmed_id = None
@@ -120,7 +133,7 @@ def get_data_and_add_experiment(file,eid=""):
 
 # Function to add mutation data to experiments, needs to be .xlsx
 
-def add_mutation_to_experiment(mutation_file,eid):
+def add_mutation_to_experiment(mutation_file):
     ## URLS
     base_url = "https://cameldatabase.com/CAMEL/"
     api_url = base_url + "api"
@@ -145,8 +158,15 @@ def add_mutation_to_experiment(mutation_file,eid):
     auth_request = req.get(auth_url, auth=(login, password))
     token = auth_request.headers['AuthToken']
 
-    ## Create the header we're going to send along
+    # Create the header we're going to send along
     auth_header = {'AuthToken': token}
+
+    # Get experiment ID from the given file, always needs to be experimentID double _ then file name which should be
+    # name of experiment
+    file_name = re.split("/", mutation_file)
+    file_name = file_name[-1]
+    eid = re.split("_", file_name)
+    eid = eid[0]
 
     local_file_name = mutation_file
     exp_id = eid
@@ -221,5 +241,5 @@ def remove_experiment(eid):
 #  for fname in glob.glob(path):
 #     get_data_and_add_experiment(fname,)
 
-#add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/Mutationlisttemplate_new.xlsx',757)
+#add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/100__test_Tee.xlsx')
 

@@ -134,7 +134,7 @@ def mutTranslate(csvfile):
                       columns=["CHROM", "START POS", "END POS", 'TYPE', 'REF', 'ALT', 'GEN', '∆AA', 'POP', 'CLON', 'TIME',
                                'FREQ', 'COM', "Measure of Time(Flask)"])
     # print(df)
-    df.to_excel("test_Tee" + '.xlsx', index=False)
+    df.to_excel("100__test_Tee" + '.xlsx', index=False)
     f.close()
 
 
