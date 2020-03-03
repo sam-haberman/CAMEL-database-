@@ -6,7 +6,7 @@ import csv
 import re
 import pandas as pd
 import glob
-path = ""
+path = "C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment Files to convert"
 
 def mutTranslate(csvfile):
     # Open each csvfile
@@ -99,6 +99,12 @@ def mutTranslate(csvfile):
             data[j][5] = ampsplit[0]
             data[j][2] = int(data[j][1].replace(",", "")) + 1
             data[j][7] = ""
+        # handling multiple substitutions by the number of bases changed
+        if data[j][3] == "SUB":
+            subsplit = re.split("→", data[j][4])
+            data[j][2] = int(data[j][1].replace(',', "")) + int(re.split(" ",subsplit[0])[0])
+            data[j][4] = ""
+            data[j][5] = subsplit[1]
         j += 1
     # Loop to do multiple mutations per line
     j = 0
@@ -111,7 +117,7 @@ def mutTranslate(csvfile):
             if data[j][o] != "":
                 stors.append(
                     [data[j][0], data[j][1].replace(",", ""), data[j][2], data[j][3], data[j][4], data[j][5], data[j][6],
-                     data[j][7].split(' ')[0], str(Groups[o - 7]).split(" ")[0][3:], str(Groups[o - 7]).split(" ")[2][1:],
+                     data[j][7].split(' ')[0], str(Groups[o - 8]).split(" ")[0][3:], str(Groups[o - 8]).split(" ")[2][1:],
                      str(Groups[o - 7]).split(" ")[1][1:], data[j][o], data[j][7],""])
                 o += 1
             else:
@@ -134,11 +140,11 @@ def mutTranslate(csvfile):
                       columns=["CHROM", "START POS", "END POS", 'TYPE', 'REF', 'ALT', 'GEN', '∆AA', 'POP', 'CLON', 'TIME',
                                'FREQ', 'COM', "Measure of Time(Flask)"])
     # print(df)
-    df.to_excel("100__test_Tee" + '.xlsx', index=False)
+    df.to_excel(csvfile + '.xlsx', index=False)
     f.close()
 
 
-mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/FilestoConvert/Tee')
+mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment Files to convert/42C.csv')
 # Goes through every file in the folder and runs our function to convert the CSV file into our template
-# for fname in glob.glob(path):
-#     mutationtransfer(fname)
+# for file in glob.glob(path):
+#     mutTranslate(file)
