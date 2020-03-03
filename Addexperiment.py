@@ -238,7 +238,7 @@ def remove_experiment(eid):
 #get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',)
 
 # Adding experiments from a folder rather than individually
-#  for fname in glob.glob(path):
+#  for fname in glob.glob(path + '\\*'):
 #     get_data_and_add_experiment(fname,)
 
 #add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/100__test_Tee.xlsx')

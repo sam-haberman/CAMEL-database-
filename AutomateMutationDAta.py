@@ -144,7 +144,7 @@ def mutTranslate(csvfile):
     f.close()
 
 
-mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment Files to convert/42C.csv')
+#mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment Files to convert/42C.csv')
 # Goes through every file in the folder and runs our function to convert the CSV file into our template
-# for file in glob.glob(path):
-#     mutTranslate(file)
+for file in glob.glob(path + '\\*'):
+    mutTranslate(file)
