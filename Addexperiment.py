@@ -31,7 +31,7 @@ def get_data_and_add_experiment(file, eid=""):
                 val[entry] = float(val[entry])
         entry += 1
 
-    # Create fields dictionary and check for multiple entries by looking for a comma
+    # Create fields dictionary and check for multiple entries by looking for a semicolon
     start = 1
     fielddict = {}
     counter = 1
@@ -39,7 +39,7 @@ def get_data_and_add_experiment(file, eid=""):
         if val[start] != '':
             fielddict[str(start)] = {}
             if isinstance(val[start], str):
-                comma_check = re.split(",", val[start])
+                comma_check = re.split(";", val[start])
                 for element in comma_check:
                     fielddict[str(start)]['new_' + str(counter)] = element
                     counter += 1
