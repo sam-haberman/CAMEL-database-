@@ -105,6 +105,15 @@ def mutTranslate(csvfile):
             data[j][2] = int(data[j][1].replace(',', "")) + int(re.split(" ",subsplit[0])[0])
             data[j][4] = ""
             data[j][5] = subsplit[1]
+        # inversion mutations, inversion length is added to position start to signify length of the inversion
+        if data[j][3] == "INV":
+            invsplit = re.split(" ", data[j][4])
+            data[j][2] = int(data[j][1].replace(',', "")) + int(re.split(" ",subsplit[0])[0])
+            data[j][4] = ""
+        # gene conversion mutations
+        # if data[j][3] == "CON":
+        #     #waiting for input
+
         j += 1
     # Loop to do multiple mutations per line
     j = 0
