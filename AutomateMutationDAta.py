@@ -22,7 +22,7 @@ def mutTranslate(csvfile):
     # Use regular expressions to get the actual headers from the header file
     Groups = []
     for i in range(len(Isolates)):
-        Groups.append(re.findall("[A-Z].*[1-9]", Isolates[i]))
+        Groups.append(re.findall("[A][0-9]+[ ][F][0-9]+[ ][I][0-9]+[ ][R][0-9]+", Isolates[i]))
     # Add each mutation from csv file into a list
     data = []
     for row in csv_f:
@@ -144,7 +144,7 @@ def mutTranslate(csvfile):
     f.close()
 
 
-#mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment Files to convert/42C.csv')
+#mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment Files to convert/42CTenaillonAra.csv')
 # Goes through every file in the folder and runs our function to convert the CSV file into our template
 # for file in glob.glob(path + '\\*'):
 #     mutTranslate(file)
