@@ -1,6 +1,6 @@
 # Goal is to take a file of mutation data, retrieve all the unique SNPs from it and run them through
 # MutFunc(http://www.mutfunc.com/ to provide extra information to the data providers about their mutations
-
+# This script is ideally attached to the button the experiment page that will return fresh data to the user on demand
 import pandas as pd
 import re
 import mechanize
