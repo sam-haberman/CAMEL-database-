@@ -4,8 +4,8 @@
 import pandas as pd
 import re
 import mechanize
-
-
+import time
+import urllib.request
 
 # requires an excel file of mutations that should be obtained from the Camel database experiment page. Since MutFunc
 # only works on SNPs the first thing we have to do is remove all non SNPs and only keep unique values
@@ -36,8 +36,14 @@ def runmutfunc(file):
     br.submit()
     base_url = br.geturl()
     print(base_url)
-
-
+    # cannot figure out how to have the url updated from the wait page to the results page, even though it is redirected
+    # so we will just set an arbitrarily long wait time where we then assume that the loading as finished and we move to
+    # the export page which lets us download the files
+    # Here we pause for 5 minutes (can be changed) before switching our page to the results
+    time.sleep(150)
+    new_url = str(base_url).replace("wait", "export")
+    urllib.request.urlretrieve(new_url, file + ".gz")
+    print("Done!")
 
 
 runmutfunc("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")
