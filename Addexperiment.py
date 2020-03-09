@@ -249,7 +249,33 @@ def add_mutation_to_experiment(mutation_file):
     else:
         print("Upload failed")
 
+    # Now that we attached the mutation data we want to add mutFunc
+    # first we have to check the species to see if it is E. coli
+    if val[1] == "E.coli":
+        # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
+        mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1')
+        if mut_df.loc[1, "CHROM"] == "NC_000913":
+            mut_func_file = mut_func_info(mutation_file)
+            # We upload the file to a temporary location on the server
+            attachment = {'file': open(mut_func_file, 'rb')}
+            resp = req.post(attach_url, files=attachment, headers=auth_header)
 
+            # Get the temporary id of the upload
+            tmp_uuid = resp.json()['uuid']
+
+            # Set the attachment field to the tmp id and name the file
+            # The file will be moved to the correct location
+            dest_file_name = "Complete MutFunc Results.gz"
+            attach_exp = {
+                'fields': {
+                    '44': {
+                        'new_1': {
+                            'uuid': tmp_uuid,
+                            'filename': dest_file_name}
+                    }
+                }
+            }
+            resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
 
 def remove_experiment(eid):
 
