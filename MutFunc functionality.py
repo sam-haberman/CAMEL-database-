@@ -39,11 +39,12 @@ def runmutfunc(file):
     # cannot figure out how to have the url updated from the wait page to the results page, even though it is redirected
     # so we will just set an arbitrarily long wait time where we then assume that the loading as finished and we move to
     # the export page which lets us download the files
-    # Here we pause for 5 minutes (can be changed) before switching our page to the results
-    time.sleep(150)
+    # Here we pause for 3 minutes (can be changed) before switching our page to the results
+    time.sleep(40)
     new_url = str(base_url).replace("wait", "export")
     urllib.request.urlretrieve(new_url, file + ".gz")
-    print("Done!")
+    # Here we then want to save this file so that it can be added to the field when experiments are added or mutation
+    # data is attached
 
 
 runmutfunc("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")
