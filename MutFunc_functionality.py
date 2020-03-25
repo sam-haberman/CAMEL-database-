@@ -1,0 +1,199 @@
+# Goal is to take a file of mutation data, retrieve all the unique SNPs from it and run them through
+# MutFunc(http://www.mutfunc.com/ to provide extra information to the data providers about their mutations
+# This script is ideally attached to the button the experiment page that will return fresh data to the user on demand
+import pandas as pd
+import re
+import mechanize
+import time
+import urllib.request
+import zipfile
+
+# requires an excel file of mutations that should be obtained from the Camel database experiment page. Since MutFunc
+# only works on SNPs the first thing we have to do is remove all non SNPs and only keep unique values
+
+
+def runmutfunc(file):
+    df = pd.read_excel(file)
+    # Here we filter to only keep SNP mutations
+    is_SNP = df['TYPE'] == "SNP"
+    df = df[is_SNP]
+    mutation_update_df = df[is_SNP]
+    # drop duplicates
+    df.drop_duplicates()
+    # Take only data from the SNPs that we want for checking in MutFunc
+    # Merge all parts together so they can be added as one entry per line
+    SNP_list = pd.DataFrame()
+    SNP_list["SNPs"] = "chr" + " " + df["START POS"].astype(str) + " " + df["REF"] + " " + df["ALT"]
+    # time now to learn how to access the website through python, looking at the mechanize package
+    br = mechanize.Browser()
+    br.open("http://www.mutfunc.com/submit#")
+    br.select_form(nr=0)
+    species = br.form.find_control("tax_id")
+    for item in species.items:
+        if item.name == "2":
+            item.selected = True
+    mutations = ""
+    for i in range(len(SNP_list)):
+        mutations = mutations + SNP_list["SNPs"].iloc[i] + "\n"
+    br.form['muts_text'] = mutations
+    br.submit()
+    base_url = br.geturl()
+    print(base_url)
+    # cannot figure out how to have the url updated from the wait page to the results page, even though it is redirected
+    # so we will just set an arbitrarily long wait time where we then assume that the loading as finished and we move to
+    # the export page which lets us download the files
+    # Here we pause for 3 minutes (can be changed) before switching our page to the results
+    time.sleep(40)
+    new_url = str(base_url).replace("wait", "export")
+    urllib.request.urlretrieve(new_url, file + ".gz")
+    # Here we then want to save this file so that it can be added to the field when experiments are added or mutation
+    # data is attached
+    extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz", mutation_update_df)
+
+def extract_files(mut_func_file, mutation_data_frame):
+    # now we have the zipped file and we want to unzip it and reach each file one by one and collect the important parts
+    # we know the order of the unzipped files which is psites, start_stop, interfaces, other_ptms, linear_motifs,
+    # conservation, stability, tfbs
+    # add new columns to our data frame that will be our final results
+    # need to also add information about what each column represents
+    df = pd.read_excel(mutation_data_frame)
+    is_SNP = df['TYPE'] == "SNP"
+    df = df[is_SNP]
+    columns_to_add = ["refaa", "altaa", "impact", "score", "ic", "ddg", "pdb_id", "sequence", "accession",
+                      "modification_type", "site_function", "function_evidence", "predicted_kinase", "probability_loss",
+                      "knockout_pvalue", "tf"]
+    for entry in columns_to_add:
+        df[entry] = ""
+    zip_file_object = zipfile.ZipFile(mut_func_file, 'r')
+    # Each file has a different header length so we will do each individually as well as different requirements of what
+    # data to retrieve
+    # first we do psites
+    p_sites = zip_file_object.open(zip_file_object.namelist()[0])
+    p_sites_mutations = pd.read_csv(p_sites, skiprows=24, header=0, delimiter='\t')
+    # check to see if the file is empty outside of the header
+    if p_sites_mutations.empty:
+        pass
+    else:
+        index = 0
+        while index < p_sites_mutations.shape[0]:
+            for rownumber, mutation in df.loc[df['START POS'] == p_sites_mutations.loc[index, "pos"]].iterrows():
+                df.loc[rownumber, "refaa"] = p_sites_mutations.loc[index, "refaa"]
+                df.loc[rownumber, "altaa"] = p_sites_mutations.loc[index, "altaa"]
+                df.loc[rownumber, "impact"] = p_sites_mutations.loc[index, "impact"]
+                df.loc[rownumber, "site_function"] = p_sites_mutations.loc[index, "site_function"]
+                df.loc[rownumber, "function_evidence"] = p_sites_mutations.loc[index, "function_evidence"]
+                df.loc[rownumber, "predicted_kinase"] = p_sites_mutations.loc[index, "predicted_kinase"]
+                df.loc[rownumber, "probability_loss"] = p_sites_mutations.loc[index, "probability_loss"]
+            index += 1
+    p_sites.close()
+    # now we do start_stop
+    start_stop = zip_file_object.open(zip_file_object.namelist()[1])
+    start_stop_mutations = pd.read_csv(start_stop, skiprows=11, header=None, delimiter='\t')
+    if start_stop_mutations.empty:
+        pass
+    else:
+        # loop through mutations and
+        index = 0
+        while index < start_stop_mutations.shape[0]:
+            for rownumber, mutation in df.loc[df['START POS'] == start_stop_mutations.loc[index, 1]].iterrows():
+                df.loc[rownumber, "refaa"] = start_stop_mutations.loc[index, 6]
+                df.loc[rownumber, "altaa"] = start_stop_mutations.loc[index, 7]
+                df.loc[rownumber, "impact"] = start_stop_mutations.loc[index, 8]
+            index += 1
+    start_stop.close()
+    interfaces = zip_file_object.open(zip_file_object.namelist()[2])
+    interfaces_mutations = pd.read_csv(interfaces, skiprows=20, header=0, delimiter="\t")
+
+    if interfaces_mutations.empty:
+        pass
+    else:
+        index = 0
+        while index < interfaces_mutations.shape[0]:
+            for rownumber, mutation in df.loc[df['START POS'] == interfaces_mutations.loc[index, "pos"]].iterrows():
+                df.loc[rownumber, "refaa"] = interfaces_mutations.loc[index, "refaa"]
+                df.loc[rownumber, "altaa"] = interfaces_mutations.loc[index, "altaa"]
+                df.loc[rownumber, "impact"] = interfaces_mutations.loc[index, "impact"]
+                df.loc[rownumber, "pdb_id"] = interfaces_mutations.loc[index, "pdb_id"]
+                df.loc[rownumber, "ddg"] = interfaces_mutations.loc[index, "ddg"]
+            index += 1
+    interfaces.close()
+    other_ptms = zip_file_object.open(zip_file_object.namelist()[3])
+    other_ptms_mutations = pd.read_csv(other_ptms, skiprows=16, header=0, delimiter="\t")
+    if other_ptms_mutations.empty:
+        pass
+    else:
+        index = 0
+        while index < other_ptms_mutations.shape[0]:
+            for rownumber, mutation in df.loc[df['START POS'] == other_ptms_mutations.loc[index, "pos"]].iterrows():
+                df.loc[rownumber, "refaa"] = other_ptms_mutations.loc[index, "refaa"]
+                df.loc[rownumber, "altaa"] = other_ptms_mutations.loc[index, "altaa"]
+                df.loc[rownumber, "impact"] = other_ptms_mutations.loc[index, "impact"]
+                df.loc[rownumber, "modification_type"] = interfaces_mutations.loc[index, "modification_type"]
+            index += 1
+    other_ptms.close()
+    linear_motifs = zip_file_object.open(zip_file_object.namelist()[4])
+    linear_motifs_mutations = pd.read_csv(linear_motifs, skiprows=21, header=0, delimiter="\t")
+    if linear_motifs_mutations.empty:
+        pass
+    else:
+        index = 0
+        while index < linear_motifs_mutations.shape[0]:
+            for rownumber, mutation in df.loc[df['START POS'] == linear_motifs_mutations.loc[index, "pos"]].iterrows():
+                df.loc[rownumber, "refaa"] = linear_motifs_mutations.loc[index, "refaa"]
+                df.loc[rownumber, "altaa"] = linear_motifs_mutations.loc[index, "altaa"]
+                df.loc[rownumber, "impact"] = linear_motifs_mutations.loc[index, "impact"]
+                df.loc[rownumber, "sequence"] = linear_motifs_mutations.loc[index, "sequence"]
+                df.loc[rownumber, "accession"] = linear_motifs_mutations.loc[index, "accession"]
+            index += 1
+    linear_motifs.close()
+    conservation = zip_file_object.open(zip_file_object.namelist()[5])
+    conservation_mutations = pd.read_csv(conservation, skiprows=16, header=0, delimiter="\t")
+    if conservation_mutations.empty:
+        pass
+    else:
+        index = 0
+        while index < conservation_mutations.shape[0]:
+            for rownumber, mutation in df.loc[df['START POS'] == conservation_mutations.loc[index, "pos"]].iterrows():
+                df.loc[rownumber, "refaa"] = conservation_mutations.loc[index, "refaa"]
+                df.loc[rownumber, "altaa"] = conservation_mutations.loc[index, "altaa"]
+                df.loc[rownumber, "impact"] = conservation_mutations.loc[index, "impact"]
+                df.loc[rownumber, "score"] = conservation_mutations.loc[index, "score"]
+                df.loc[rownumber, "ic"] = conservation_mutations.loc[index, "ic"]
+            index += 1
+    conservation.close()
+    stability = zip_file_object.open(zip_file_object.namelist()[6])
+    stability_mutations = pd.read_csv(stability, skiprows=17, header=0, delimiter="\t")
+    if stability_mutations.empty:
+        pass
+    else:
+        index = 0
+        while index < stability_mutations.shape[0]:
+            for rownumber, mutation in df.loc[df['START POS'] == stability_mutations.loc[index, "pos"]].iterrows():
+                df.loc[rownumber, "refaa"] = stability_mutations.loc[index, "refaa"]
+                df.loc[rownumber, "altaa"] = stability_mutations.loc[index, "altaa"]
+                df.loc[rownumber, "impact"] = stability_mutations.loc[index, "impact"]
+                df.loc[rownumber, "pdb_id"] = stability_mutations.loc[index, "pdb_id"]
+                df.loc[rownumber, "ddg"] = stability_mutations.loc[index, "ddg"]
+            index += 1
+    stability.close()
+    tfbs = zip_file_object.open(zip_file_object.namelist()[7])
+    tfbs_mutations = pd.read_csv(tfbs, skiprows=28, header=0, delimiter="\t")
+    if tfbs_mutations.empty:
+        pass
+    else:
+        index = 0
+        while index < tfbs_mutations.shape[0] - 1:
+            for rownumber, mutation in df.loc[df['START POS'] == tfbs_mutations.loc[index, "pos"]].iterrows():
+                df.loc[rownumber, "refaa"] = tfbs_mutations.loc[index, "refaa"]
+                df.loc[rownumber, "altaa"] = tfbs_mutations.loc[index, "altaa"]
+                df.loc[rownumber, "impact"] = tfbs_mutations.loc[index, "impact"]
+                df.loc[rownumber, "tf"] = tfbs_mutations.loc[index, "tf"]
+                df.loc[rownumber, "knockout_pvalue"] = tfbs_mutations.loc[index, "knockout_pvalue"]
+            index += 1
+    tfbs.close()
+    return df
+
+
+# runmutfunc("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")
+extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz",
+              "C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")

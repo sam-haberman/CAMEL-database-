@@ -6,6 +6,8 @@ import re
 import glob
 import time
 import mechanize
+from MutFunc_functionality import extract_files
+import zipfile
 path = ""
 # Create function to pull all data from excel file, log in and add experiment
 # Also includes function to attach mutation data to an experiment
@@ -158,13 +160,20 @@ def get_data_and_add_experiment(file, mutfile =""):
     # to see if it is E. Coli or Yeast(eventually) and then also check to see what the strain is since we only work on
     # the standard most popular strain for both
     # First we have to check the species(starting with just E. Coli)
-    if val[1] == "E.coli" and mutfile != "":
+    if val[1] == "Escherichia coli" and mutfile != "":
         # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
         mut_df = pd.read_excel(mutfile, sheet_name='Sheet1')
         if mut_df.loc[1, "CHROM"] == "NC_000913":
             mut_func_file = mut_func_info(mutfile)
-            # We upload the file to a temporary location on the server
-            attachment = {'file': open(mut_func_file, 'rb')}
+            # Update our mutation excel file with the Mutfunc results and return it as a new file
+            updated_mutation_dataframe = extract_files(mut_func_file, mutfile)
+            updated_mutation_dataframe.to_excel("Mutations with Mutfunc results.xlsx", index=False)
+            # add this file to the zip file of mutation results
+            final_results = zipfile.ZipFile("Mutation_mutfunc_results.zip", "w")
+            final_results.write("Mutations with Mutfunc results.xlsx")
+            final_results.write(mut_func_file)
+            # We upload the file to a temporary location on the server (STUCK HERE)
+            attachment = {'file': open(final_results, 'rb')}
             resp = req.post(attach_url, files=attachment, headers=auth_header)
 
             # Get the temporary id of the upload
@@ -251,31 +260,35 @@ def add_mutation_to_experiment(mutation_file):
 
     # Now that we attached the mutation data we want to add mutFunc
     # first we have to check the species to see if it is E. coli
-    if val[1] == "E.coli":
-        # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
-        mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1')
-        if mut_df.loc[1, "CHROM"] == "NC_000913":
-            mut_func_file = mut_func_info(mutation_file)
-            # We upload the file to a temporary location on the server
-            attachment = {'file': open(mut_func_file, 'rb')}
-            resp = req.post(attach_url, files=attachment, headers=auth_header)
+    # To do so we use the api and pull the experiment information
+    # to check if E. coli or Escherichia coli is a listed species
+    experiments = req.get("https://cameldatabase.com/CAMEL/api/experiment/" + eid).json()
+    for key, value in experiments.get("fields").get("1").items():
+        if "Escherichia coli" in value:
+            # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
+            mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1')
+            if mut_df.loc[1, "CHROM"] == "NC_000913":
+                mut_func_file = mut_func_info(mutation_file)
+                # We upload the file to a temporary location on the server
+                attachment = {'file': open(mut_func_file, 'rb')}
+                resp = req.post(attach_url, files=attachment, headers=auth_header)
 
-            # Get the temporary id of the upload
-            tmp_uuid = resp.json()['uuid']
+                # Get the temporary id of the upload
+                tmp_uuid = resp.json()['uuid']
 
-            # Set the attachment field to the tmp id and name the file
-            # The file will be moved to the correct location
-            dest_file_name = "Complete MutFunc Results.gz"
-            attach_exp = {
-                'fields': {
-                    '44': {
-                        'new_1': {
-                            'uuid': tmp_uuid,
-                            'filename': dest_file_name}
+                # Set the attachment field to the tmp id and name the file
+                # The file will be moved to the correct location
+                dest_file_name = "Complete MutFunc Results.gz"
+                attach_exp = {
+                    'fields': {
+                        '44': {
+                            'new_1': {
+                                'uuid': tmp_uuid,
+                                'filename': dest_file_name}
+                        }
                     }
                 }
-            }
-            resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
+                resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
 
 def remove_experiment(eid):
 
@@ -353,14 +366,14 @@ def mut_func_info(mutfile):
     return mut_func_file
 
 
-# remove_experiment(759)
+# remove_experiment(780)
 # Have to give file with experiment information and either leave id blank or give a number
 get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
-                            "C:/Users/samue/Desktop/Thesis/42C.xlsx")
+                            "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
 #get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
 # Adding experiments from a folder rather than individually
 #  for fname in glob.glob(path + '\\*'):
 #     get_data_and_add_experiment(fname,)
 
-#add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/778__test_Tee.xlsx')
+#add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx')
 
