@@ -2,12 +2,11 @@
 # MutFunc(http://www.mutfunc.com/ to provide extra information to the data providers about their mutations
 # This script is ideally attached to the button the experiment page that will return fresh data to the user on demand
 import pandas as pd
-import re
 import mechanize
 import time
 import urllib.request
 import zipfile
-import os
+
 
 # requires an excel file of mutations that should be obtained from the Camel database experiment page. Since MutFunc
 # only works on SNPs the first thing we have to do is remove all non SNPs and only keep unique values
@@ -65,15 +64,12 @@ def extract_files(mut_func_file, mutation_data_frame):
     # add new columns to our data frame that will be our final results
     # need to also add information about what each column represents
     df = mutation_data_frame
-    is_SNP = df[3] == "SNP"
+    is_SNP = df["TYPE"] == "SNP"
     df = df[is_SNP]
     columns_to_add = ["", "refaa", "altaa", "impact", "score", "ic", "ddg", "pdb_id", "sequence", "accession",
                       "modification_type", "site_function", "function_evidence", "predicted_kinase", "probability_loss",
                       "knockout_pvalue", "tf"]
-    for entry in columns_to_add:
-        df[entry] = ""
-    print(type(df))
-    # df = df.reindex(columns=df.append(df.columns.values + columns_to_add))
+    df = df.reindex(columns=df.columns.tolist() + columns_to_add)
     zip_file_object = zipfile.ZipFile(mut_func_file, 'r')
     # Each file has a different header length so we will do each individually as well as different requirements of what
     # data to retrieve
@@ -201,9 +197,13 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "knockout_pvalue"] = tfbs_mutations.loc[index, "knockout_pvalue"]
             index += 1
     tfbs.close()
+
+    # testing code to add comments
+
+
     return df
 
 
 # runmutfunc("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
-extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz",
-              "C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")
+# extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz",
+#               "C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")
