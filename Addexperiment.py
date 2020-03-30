@@ -7,6 +7,7 @@ import glob
 import time
 import mechanize
 from MutFunc_functionality import extract_files
+from MutFunc_functionality import runmutfunc
 import zipfile
 path = ""
 # Create function to pull all data from excel file, log in and add experiment
@@ -164,16 +165,16 @@ def get_data_and_add_experiment(file, mutfile =""):
         # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
         mut_df = pd.read_excel(mutfile, sheet_name='Sheet1')
         if mut_df.loc[1, "CHROM"] == "NC_000913":
-            mut_func_file = mut_func_info(mutfile)
+            mut_func_file = runmutfunc(mutfile)
             # Update our mutation excel file with the Mutfunc results and return it as a new file
-            updated_mutation_dataframe = extract_files(mut_func_file, mutfile)
+            updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
             updated_mutation_dataframe.to_excel("Mutations with Mutfunc results.xlsx", index=False)
             # add this file to the zip file of mutation results
-            final_results = zipfile.ZipFile("Mutation_mutfunc_results.zip", "w")
-            final_results.write("Mutations with Mutfunc results.xlsx")
-            final_results.write(mut_func_file)
+            zip_open = zipfile.ZipFile(mut_func_file, 'a')
+            zip_open.write("Mutations with Mutfunc results.xlsx")
+            zip_open.close()
             # We upload the file to a temporary location on the server (STUCK HERE)
-            attachment = {'file': open(final_results, 'rb')}
+            attachment = {'file': open(mut_func_file, 'rb')}
             resp = req.post(attach_url, files=attachment, headers=auth_header)
 
             # Get the temporary id of the upload

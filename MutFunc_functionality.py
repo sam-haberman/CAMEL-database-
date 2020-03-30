@@ -7,6 +7,7 @@ import mechanize
 import time
 import urllib.request
 import zipfile
+import os
 
 # requires an excel file of mutations that should be obtained from the Camel database experiment page. Since MutFunc
 # only works on SNPs the first thing we have to do is remove all non SNPs and only keep unique values
@@ -38,7 +39,6 @@ def runmutfunc(file):
     br.form['muts_text'] = mutations
     br.submit()
     base_url = br.geturl()
-    print(base_url)
     # cannot figure out how to have the url updated from the wait page to the results page, even though it is redirected
     # so we will just set an arbitrarily long wait time where we then assume that the loading as finished and we move to
     # the export page which lets us download the files
@@ -46,9 +46,17 @@ def runmutfunc(file):
     time.sleep(40)
     new_url = str(base_url).replace("wait", "export")
     urllib.request.urlretrieve(new_url, file + ".gz")
+    mut_func_file = file + ".gz"
+    return mut_func_file
     # Here we then want to save this file so that it can be added to the field when experiments are added or mutation
     # data is attached
-    extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz", mutation_update_df)
+    # extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz", mutation_update_df)
+    # this part on is for testing and doesnt need to necessarily be part of the add experiment though maybe it could
+    # updated_data_frame.to_excel("Mutations with Mutfunc results.xlsx", index=False)
+    # zip = zipfile.ZipFile("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz", 'a')
+    # zip.write("Mutations with Mutfunc results.xlsx")
+    # zip.close()
+
 
 def extract_files(mut_func_file, mutation_data_frame):
     # now we have the zipped file and we want to unzip it and reach each file one by one and collect the important parts
@@ -56,14 +64,16 @@ def extract_files(mut_func_file, mutation_data_frame):
     # conservation, stability, tfbs
     # add new columns to our data frame that will be our final results
     # need to also add information about what each column represents
-    df = pd.read_excel(mutation_data_frame)
-    is_SNP = df['TYPE'] == "SNP"
+    df = mutation_data_frame
+    is_SNP = df[3] == "SNP"
     df = df[is_SNP]
-    columns_to_add = ["refaa", "altaa", "impact", "score", "ic", "ddg", "pdb_id", "sequence", "accession",
+    columns_to_add = ["", "refaa", "altaa", "impact", "score", "ic", "ddg", "pdb_id", "sequence", "accession",
                       "modification_type", "site_function", "function_evidence", "predicted_kinase", "probability_loss",
                       "knockout_pvalue", "tf"]
     for entry in columns_to_add:
         df[entry] = ""
+    print(type(df))
+    # df = df.reindex(columns=df.append(df.columns.values + columns_to_add))
     zip_file_object = zipfile.ZipFile(mut_func_file, 'r')
     # Each file has a different header length so we will do each individually as well as different requirements of what
     # data to retrieve
@@ -194,6 +204,6 @@ def extract_files(mut_func_file, mutation_data_frame):
     return df
 
 
-# runmutfunc("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")
+# runmutfunc("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
 extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz",
               "C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")
