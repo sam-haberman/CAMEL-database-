@@ -672,3 +672,4 @@ venv/Lib/site-packages/openpyxl/xml/constants.py
 venv/Lib/site-packages/openpyxl/xml/functions.py
 __pycache__/MutFunc_functionality.cpython-37.pyc
 *.pyc
+__pycache__/MutFunc_functionality.cpython-37.pyc

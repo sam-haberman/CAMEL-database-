@@ -3,11 +3,7 @@ import urllib
 import requests as req
 import pandas as pd
 import re
-import os
-import time
-import mechanize
-import win32com.client
-
+import glob
 from MutFunc_functionality import extract_files
 from MutFunc_functionality import runmutfunc
 from MutFunc_functionality import add_column_description
@@ -166,7 +162,7 @@ def get_data_and_add_experiment(file, mutfile =""):
     # First we have to check the species(starting with just E. Coli)
     if val[1] == "Escherichia coli" and mutfile != "":
         # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
-        mut_df = pd.read_excel(mutfile, sheet_name='Sheet1')
+        mut_df = pd.read_excel(mutfile, sheet_name='Sheet1', header=4)
         if mut_df.loc[1, "CHROM"] == "NC_000913":
             mut_func_file = runmutfunc(mutfile)
             # Update our mutation excel file with the Mutfunc results and return it as a new file with appropriately
@@ -341,10 +337,10 @@ def remove_experiment(eid):
 # Have to give file with experiment information and either leave id blank or give a number
 # get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
 #                             "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
-#get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
+# get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
 # Adding experiments from a folder rather than individually
-#  for fname in glob.glob(path + '\\*'):
+# for fname in glob.glob(path + '\\*'):
 #     get_data_and_add_experiment(fname,)
-
-add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx')
+#
+# add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx')
 

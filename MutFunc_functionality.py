@@ -16,7 +16,7 @@ import win32com.client
 
 
 def runmutfunc(file):
-    df = pd.read_excel(file)
+    df = pd.read_excel(file, header=4)
     # Here we filter to only keep SNP mutations
     is_SNP = df['TYPE'] == "SNP"
     df = df[is_SNP]
@@ -25,7 +25,7 @@ def runmutfunc(file):
     # Take only data from the SNPs that we want for checking in MutFunc
     # Merge all parts together so they can be added as one entry per line
     SNP_list = pd.DataFrame()
-    SNP_list["SNPs"] = "chr" + " " + df["START POS"].astype(str) + " " + df["REF"] + " " + df["ALT"]
+    SNP_list["SNPs"] = "chr" + " " + df["Start POS"].astype(str) + " " + df["REF"] + " " + df["ALT"]
     # time now to learn how to access the website through python, looking at the mechanize package
     br = mechanize.Browser()
     br.open("http://www.mutfunc.com/submit#")
@@ -103,7 +103,7 @@ def extract_files(mut_func_file, mutation_data_frame):
         # loop through mutations and
         index = 0
         while index < start_stop_mutations.shape[0]:
-            for rownumber, mutation in df.loc[df['START POS'] == start_stop_mutations.loc[index, 1]].iterrows():
+            for rownumber, mutation in df.loc[df['Start POS'] == start_stop_mutations.loc[index, 1]].iterrows():
                 df.loc[rownumber, "refaa"] = start_stop_mutations.loc[index, 6]
                 df.loc[rownumber, "altaa"] = start_stop_mutations.loc[index, 7]
                 df.loc[rownumber, "impact"] = start_stop_mutations.loc[index, 8]
@@ -117,7 +117,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     else:
         index = 0
         while index < interfaces_mutations.shape[0]:
-            for rownumber, mutation in df.loc[df['START POS'] == interfaces_mutations.loc[index, "pos"]].iterrows():
+            for rownumber, mutation in df.loc[df['Start POS'] == interfaces_mutations.loc[index, "pos"]].iterrows():
                 df.loc[rownumber, "refaa"] = interfaces_mutations.loc[index, "refaa"]
                 df.loc[rownumber, "altaa"] = interfaces_mutations.loc[index, "altaa"]
                 df.loc[rownumber, "impact"] = interfaces_mutations.loc[index, "impact"]
@@ -132,7 +132,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     else:
         index = 0
         while index < other_ptms_mutations.shape[0]:
-            for rownumber, mutation in df.loc[df['START POS'] == other_ptms_mutations.loc[index, "pos"]].iterrows():
+            for rownumber, mutation in df.loc[df['Start POS'] == other_ptms_mutations.loc[index, "pos"]].iterrows():
                 df.loc[rownumber, "refaa"] = other_ptms_mutations.loc[index, "refaa"]
                 df.loc[rownumber, "altaa"] = other_ptms_mutations.loc[index, "altaa"]
                 df.loc[rownumber, "impact"] = other_ptms_mutations.loc[index, "impact"]
@@ -146,7 +146,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     else:
         index = 0
         while index < linear_motifs_mutations.shape[0]:
-            for rownumber, mutation in df.loc[df['START POS'] == linear_motifs_mutations.loc[index, "pos"]].iterrows():
+            for rownumber, mutation in df.loc[df['Start POS'] == linear_motifs_mutations.loc[index, "pos"]].iterrows():
                 df.loc[rownumber, "refaa"] = linear_motifs_mutations.loc[index, "refaa"]
                 df.loc[rownumber, "altaa"] = linear_motifs_mutations.loc[index, "altaa"]
                 df.loc[rownumber, "impact"] = linear_motifs_mutations.loc[index, "impact"]
@@ -161,7 +161,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     else:
         index = 0
         while index < conservation_mutations.shape[0]:
-            for rownumber, mutation in df.loc[df['START POS'] == conservation_mutations.loc[index, "pos"]].iterrows():
+            for rownumber, mutation in df.loc[df['Start POS'] == conservation_mutations.loc[index, "pos"]].iterrows():
                 df.loc[rownumber, "refaa"] = conservation_mutations.loc[index, "refaa"]
                 df.loc[rownumber, "altaa"] = conservation_mutations.loc[index, "altaa"]
                 df.loc[rownumber, "impact"] = conservation_mutations.loc[index, "impact"]
@@ -176,7 +176,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     else:
         index = 0
         while index < stability_mutations.shape[0]:
-            for rownumber, mutation in df.loc[df['START POS'] == stability_mutations.loc[index, "pos"]].iterrows():
+            for rownumber, mutation in df.loc[df['Start POS'] == stability_mutations.loc[index, "pos"]].iterrows():
                 df.loc[rownumber, "refaa"] = stability_mutations.loc[index, "refaa"]
                 df.loc[rownumber, "altaa"] = stability_mutations.loc[index, "altaa"]
                 df.loc[rownumber, "impact"] = stability_mutations.loc[index, "impact"]
@@ -191,7 +191,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     else:
         index = 0
         while index < tfbs_mutations.shape[0] - 1:
-            for rownumber, mutation in df.loc[df['START POS'] == tfbs_mutations.loc[index, "pos"]].iterrows():
+            for rownumber, mutation in df.loc[df['Start POS'] == tfbs_mutations.loc[index, "pos"]].iterrows():
                 df.loc[rownumber, "refaa"] = tfbs_mutations.loc[index, "refaa"]
                 df.loc[rownumber, "altaa"] = tfbs_mutations.loc[index, "altaa"]
                 df.loc[rownumber, "impact"] = tfbs_mutations.loc[index, "impact"]
@@ -210,8 +210,8 @@ def add_column_description():
     wb = xl.Workbooks.Open(current_file_path)
     sheet = wb.ActiveSheet
     # add comments
-    sheets = ["P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1", "AB1",
-              "AC1", "AD1", "AE1"]
+    sheets = ["O1", "P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1",
+              "AB1", "AC1", "AD1"]
     comments = ["Reference amino acid", "Mutated amino acid",
                 "Is the mutation predicted to impact function? '1' if yes, '0' if no",
                 "Sift score, any mutation with a score below 0.05 is considered deleterious ",
