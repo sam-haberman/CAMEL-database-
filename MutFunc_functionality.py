@@ -18,7 +18,6 @@ def runmutfunc(file):
     # Here we filter to only keep SNP mutations
     is_SNP = df['TYPE'] == "SNP"
     df = df[is_SNP]
-    mutation_update_df = df[is_SNP]
     # drop duplicates
     df.drop_duplicates()
     # Take only data from the SNPs that we want for checking in MutFunc
@@ -66,7 +65,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     # need to also add information about what each column represents
     df = mutation_data_frame
     is_SNP = df["TYPE"] == "SNP"
-    df = df[is_SNP]
+    df = df.loc[is_SNP]
     columns_to_add = ["", "refaa", "altaa", "impact", "score", "ic", "ddg", "pdb_id", "sequence", "accession",
                       "modification_type", "site_function", "function_evidence", "predicted_kinase", "probability_loss",
                       "knockout_pvalue", "tf"]

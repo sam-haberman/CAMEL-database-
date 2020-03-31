@@ -171,12 +171,11 @@ def get_data_and_add_experiment(file, mutfile =""):
             # Update our mutation excel file with the Mutfunc results and return it as a new file
             updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
             updated_mutation_dataframe.to_excel("Mutation_results.xlsx", index=False)
-            print(os.getcwd())
-            print(os.listdir())
             # testing code to add comments
             xl = win32com.client.Dispatch("Excel.Application")
             xl.Visible = 1
-            wb = xl.Workbooks.Open(r'C:/Users/samue/PycharmProjects/Thesis/Mutation_results.xlsx')
+            current_file_path = os.getcwd() + "\Mutation_results.xlsx"
+            wb = xl.Workbooks.Open(current_file_path)
             sheet = wb.ActiveSheet
             # add comments
             sheets = ["P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1", "AB1",
@@ -197,7 +196,8 @@ def get_data_and_add_experiment(file, mutfile =""):
                 sheet.Range(column).AddComment()
                 sheet.Range(column).Comment.Visible = False
                 sheet.Range(column).Comment.Text(comment)
-            wb.SaveAs(r'C:\Users\samue\PycharmProjects\Thesis\Mutation_results_complete.xlsx')
+            updated_file_path = os.getcwd() + "\Mutation_results_complete.xlsx"
+            wb.SaveAs(updated_file_path)
             wb.Close()
             xl.Quit()
 
