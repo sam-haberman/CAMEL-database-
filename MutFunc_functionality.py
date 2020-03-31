@@ -6,11 +6,13 @@ import mechanize
 import time
 import urllib.request
 import zipfile
-
+import os
+import win32com.client
 
 
 # requires an excel file of mutations that should be obtained from the Camel database experiment page. Since MutFunc
 # only works on SNPs the first thing we have to do is remove all non SNPs and only keep unique values
+
 
 
 def runmutfunc(file):
@@ -198,6 +200,41 @@ def extract_files(mut_func_file, mutation_data_frame):
             index += 1
     tfbs.close()
     return df
+
+
+def add_column_description():
+
+    xl = win32com.client.Dispatch("Excel.Application")
+    xl.Visible = 1
+    current_file_path = os.getcwd() + "\Mutation_results.xlsx"
+    wb = xl.Workbooks.Open(current_file_path)
+    sheet = wb.ActiveSheet
+    # add comments
+    sheets = ["P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1", "AB1",
+              "AC1", "AD1", "AE1"]
+    comments = ["Reference amino acid", "Mutated amino acid",
+                "Is the mutation predicted to impact function? '1' if yes, '0' if no",
+                "Sift score, any mutation with a score below 0.05 is considered deleterious ",
+                "Information content at this position of the alignment (a high value indicates strong conservation, where the maximum value is 4.32)",
+                "Predicted change in free energy of unfolding, where a value above 0 indicates a destabilising mutation",
+                "Pdb identifier or homology model identifier of the structure containing the mutation",
+                "Sequence of the linear motif", "ELM accession for the linear motif",
+                "Type of post-translational modifications", "Function of this phosphorylation site, if any",
+                "Evidence of site function, if any", "Kinase predicted to lose phosphorylation at this site",
+                "Probability of kinase losing phosphorylation at this site",
+                "P-value of over or under-expression for the downstream gene when the transcription factor is knocked out",
+                "Transcription factor predicted to bind this binding site"]
+    for column, comment in zip(sheets, comments):
+        sheet.Range(column).AddComment()
+        sheet.Range(column).Comment.Visible = False
+        sheet.Range(column).Comment.Text(comment)
+    updated_file_path = os.getcwd() + "\Mutation_results_complete.xlsx"
+    wb.SaveAs(updated_file_path)
+    wb.Close()
+    xl.Quit()
+
+
+
 
 
 # runmutfunc("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")

@@ -10,6 +10,7 @@ import win32com.client
 
 from MutFunc_functionality import extract_files
 from MutFunc_functionality import runmutfunc
+from MutFunc_functionality import add_column_description
 import zipfile
 path = ""
 # Create function to pull all data from excel file, log in and add experiment
@@ -168,39 +169,11 @@ def get_data_and_add_experiment(file, mutfile =""):
         mut_df = pd.read_excel(mutfile, sheet_name='Sheet1')
         if mut_df.loc[1, "CHROM"] == "NC_000913":
             mut_func_file = runmutfunc(mutfile)
-            # Update our mutation excel file with the Mutfunc results and return it as a new file
+            # Update our mutation excel file with the Mutfunc results and return it as a new file with appropriately
+            # detailed headers
             updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
             updated_mutation_dataframe.to_excel("Mutation_results.xlsx", index=False)
-            # testing code to add comments
-            xl = win32com.client.Dispatch("Excel.Application")
-            xl.Visible = 1
-            current_file_path = os.getcwd() + "\Mutation_results.xlsx"
-            wb = xl.Workbooks.Open(current_file_path)
-            sheet = wb.ActiveSheet
-            # add comments
-            sheets = ["P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1", "AB1",
-                      "AC1", "AD1", "AE1"]
-            comments = ["Reference amino acid", "Mutated amino acid",
-                        "Is the mutation predicted to impact function? '1' if yes, '0' if no",
-                        "Sift score, any mutation with a score below 0.05 is considered deleterious ",
-                        "Information content at this position of the alignment (a high value indicates strong conservation, where the maximum value is 4.32)",
-                        "Predicted change in free energy of unfolding, where a value above 0 indicates a destabilising mutation",
-                        "Pdb identifier or homology model identifier of the structure containing the mutation",
-                        "Sequence of the linear motif", "ELM accession for the linear motif",
-                        "Type of post-translational modifications", "Function of this phosphorylation site, if any",
-                        "Evidence of site function, if any", "Kinase predicted to lose phosphorylation at this site",
-                        "Probability of kinase losing phosphorylation at this site",
-                        "P-value of over or under-expression for the downstream gene when the transcription factor is knocked out",
-                        "Transcription factor predicted to bind this binding site"]
-            for column, comment in zip(sheets, comments):
-                sheet.Range(column).AddComment()
-                sheet.Range(column).Comment.Visible = False
-                sheet.Range(column).Comment.Text(comment)
-            updated_file_path = os.getcwd() + "\Mutation_results_complete.xlsx"
-            wb.SaveAs(updated_file_path)
-            wb.Close()
-            xl.Quit()
-
+            add_column_description()
             # add this file to the zip file of mutation results
             zip_open = zipfile.ZipFile(mut_func_file, 'a')
             zip_open.write("Mutation_results_complete.xlsx")
@@ -301,7 +274,13 @@ def add_mutation_to_experiment(mutation_file):
             # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
             mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1')
             if mut_df.loc[1, "CHROM"] == "NC_000913":
-                mut_func_file = mut_func_info(mutation_file)
+                mut_func_file = runmutfunc(mutation_file)
+                updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
+                updated_mutation_dataframe.to_excel("Mutation_results.xlsx", index=False)
+                add_column_description()
+                zip_open = zipfile.ZipFile(mut_func_file, 'a')
+                zip_open.write("Mutation_results_complete.xlsx")
+                zip_open.close()
                 # We upload the file to a temporary location on the server
                 attachment = {'file': open(mut_func_file, 'rb')}
                 resp = req.post(attach_url, files=attachment, headers=auth_header)
@@ -357,56 +336,15 @@ def remove_experiment(eid):
     added_exp_url = exp_url + '/' + str(exp_id)
     req.delete(added_exp_url, headers=auth_header)
 
-# function that if an experiment is added/updated with mutation data it checks to see if the species is E. Coli (Yeast
-# eventually) and if it is the standard strain. If so we add the MutFunc prediction results to the field and eventually
-# we want to add a button that gives live results too to the experiment page.
-def mut_func_info(mutfile):
-    df = pd.read_excel(mutfile)
-    # Here we filter to only keep SNP mutations
-    is_SNP = df['TYPE'] == "SNP"
-    df = df[is_SNP]
-    # drop duplicates
-    df.drop_duplicates()
-    # Take only data from the SNPs that we want for checking in MutFunc
-    # Merge all parts together so they can be added as one entry per line
-    SNP_list = pd.DataFrame()
-    SNP_list["SNPs"] = "chr" + " " + df["START POS"].astype(str) + " " + df["REF"] + " " + df["ALT"]
-    # time now to learn how to access the website through python, looking at the mechanize package
-    br = mechanize.Browser()
-    br.open("http://www.mutfunc.com/submit#")
-    br.select_form(nr=0)
-    species = br.form.find_control("tax_id")
-    for item in species.items:
-        if item.name == "2":
-            item.selected = True
-    mutations = ""
-    for i in range(len(SNP_list)):
-        mutations = mutations + SNP_list["SNPs"].iloc[i] + "\n"
-    br.form['muts_text'] = mutations
-    br.submit()
-    base_url = br.geturl()
-    print(base_url)
-    # cannot figure out how to have the url updated from the wait page to the results page, even though it is redirected
-    # so we will just set an arbitrarily long wait time where we then assume that the loading as finished and we move to
-    # the export page which lets us download the files
-    # Here we pause for 3 minutes (can be changed) before switching our page to the results
-    time.sleep(40)
-    new_url = str(base_url).replace("wait", "export")
-    urllib.request.urlretrieve(new_url, mutfile + ".gz")
-    mut_func_file = mutfile + ".gz"
-    # Here we then want to save this file so that it can be added to the field when experiments are added or mutation
-    # data is attached
-    return mut_func_file
-
 
 # remove_experiment(780)
 # Have to give file with experiment information and either leave id blank or give a number
-get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
-                            "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
+# get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
+#                             "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
 #get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
 # Adding experiments from a folder rather than individually
 #  for fname in glob.glob(path + '\\*'):
 #     get_data_and_add_experiment(fname,)
 
-#add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx')
+add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx')
 
