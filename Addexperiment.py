@@ -3,9 +3,11 @@ import urllib
 import requests as req
 import pandas as pd
 import re
-import glob
+import os
 import time
 import mechanize
+import win32com.client
+
 from MutFunc_functionality import extract_files
 from MutFunc_functionality import runmutfunc
 import zipfile
@@ -168,10 +170,40 @@ def get_data_and_add_experiment(file, mutfile =""):
             mut_func_file = runmutfunc(mutfile)
             # Update our mutation excel file with the Mutfunc results and return it as a new file
             updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
-            updated_mutation_dataframe.to_excel("Mutations with Mutfunc results.xlsx", index=False)
+            updated_mutation_dataframe.to_excel("Mutation_results.xlsx", index=False)
+            print(os.getcwd())
+            print(os.listdir())
+            # testing code to add comments
+            xl = win32com.client.Dispatch("Excel.Application")
+            xl.Visible = 1
+            wb = xl.Workbooks.Open(r'C:/Users/samue/PycharmProjects/Thesis/Mutation_results.xlsx')
+            sheet = wb.ActiveSheet
+            # add comments
+            sheets = ["P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1", "AB1",
+                      "AC1", "AD1", "AE1"]
+            comments = ["Reference amino acid", "Mutated amino acid",
+                        "Is the mutation predicted to impact function? '1' if yes, '0' if no",
+                        "Sift score, any mutation with a score below 0.05 is considered deleterious ",
+                        "Information content at this position of the alignment (a high value indicates strong conservation, where the maximum value is 4.32)",
+                        "Predicted change in free energy of unfolding, where a value above 0 indicates a destabilising mutation",
+                        "Pdb identifier or homology model identifier of the structure containing the mutation",
+                        "Sequence of the linear motif", "ELM accession for the linear motif",
+                        "Type of post-translational modifications", "Function of this phosphorylation site, if any",
+                        "Evidence of site function, if any", "Kinase predicted to lose phosphorylation at this site",
+                        "Probability of kinase losing phosphorylation at this site",
+                        "P-value of over or under-expression for the downstream gene when the transcription factor is knocked out",
+                        "Transcription factor predicted to bind this binding site"]
+            for column, comment in zip(sheets, comments):
+                sheet.Range(column).AddComment()
+                sheet.Range(column).Comment.Visible = False
+                sheet.Range(column).Comment.Text(comment)
+            wb.SaveAs(r'C:\Users\samue\PycharmProjects\Thesis\Mutation_results_complete.xlsx')
+            wb.Close()
+            xl.Quit()
+
             # add this file to the zip file of mutation results
             zip_open = zipfile.ZipFile(mut_func_file, 'a')
-            zip_open.write("Mutations with Mutfunc results.xlsx")
+            zip_open.write("Mutation_results_complete.xlsx")
             zip_open.close()
             # We upload the file to a temporary location on the server (STUCK HERE)
             attachment = {'file': open(mut_func_file, 'rb')}

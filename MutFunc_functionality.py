@@ -8,6 +8,7 @@ import urllib.request
 import zipfile
 
 
+
 # requires an excel file of mutations that should be obtained from the Camel database experiment page. Since MutFunc
 # only works on SNPs the first thing we have to do is remove all non SNPs and only keep unique values
 
@@ -197,10 +198,6 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "knockout_pvalue"] = tfbs_mutations.loc[index, "knockout_pvalue"]
             index += 1
     tfbs.close()
-
-    # testing code to add comments
-
-
     return df
 
 
