@@ -14,7 +14,6 @@ import win32com.client
 # only works on SNPs the first thing we have to do is remove all non SNPs and only keep unique values
 
 
-
 def runmutfunc(file):
     df = pd.read_excel(file, header=4)
     # Here we filter to only keep SNP mutations
