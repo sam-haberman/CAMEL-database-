@@ -20,7 +20,7 @@ def runmutfunc(file):
     is_SNP = df['TYPE'] == "SNP"
     df = df[is_SNP]
     # drop duplicates
-    df.drop_duplicates()
+    df = df.drop_duplicates()
     # Take only data from the SNPs that we want for checking in MutFunc
     # Merge all parts together so they can be added as one entry per line
     SNP_list = pd.DataFrame()
