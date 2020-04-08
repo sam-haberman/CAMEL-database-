@@ -673,3 +673,7 @@ venv/Lib/site-packages/openpyxl/xml/functions.py
 __pycache__/MutFunc_functionality.cpython-37.pyc
 *.pyc
 __pycache__/MutFunc_functionality.cpython-37.pyc
+*.py
+*.txt
+*.log
+venv/Lib/site-packages/pyperclip-1.8.0-py3.7.egg-info/PKG-INFO

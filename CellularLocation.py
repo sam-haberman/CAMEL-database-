@@ -6,6 +6,13 @@ import pandas as pd
 import re
 import mechanize
 import time
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait as wait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+import pyperclip
+
 
 # it is possible we can work with strains that are not the most popular since we just want fasta
 def locations(file):
@@ -79,16 +86,28 @@ def locations(file):
 
 
 # Now that we have the list of genes and their annotations we submit them to the cell2go website and get the resulting
-# file
+# file, mechanize doesn't work so going to try selenium
+# Depending on the browser you use you need to add an executable such as geckodriver (firefox) or chrome driver(chrome)
+# to PATH, have to download file from https://github.com/mozilla/geckodriver/releases/tag/v0.26.0 and use
+# this executable file in the path
 def cell2go(genes):
-    br = mechanize.Browser()
-    br.open("http://cello.life.nctu.edu.tw/cello2go/")
-    br.select_form(nr=1)
-    br.form['sequence'] = genes
-    br.submit()
-    time.sleep(20)
-    for l in br.links():
-        print(l)
+    # first we open up our webpage
+    path = "C:/Users/samue/Desktop/Thesis/geckodriver/geckodriver.exe"
+    browser = webdriver.Firefox(executable_path=path)
+    browser.get("http://cello.life.nctu.edu.tw/cello2go/")
+    # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
+    paste_sequence = browser.find_element_by_name("sequence")
+    paste_sequence.clear()
+    pyperclip.copy(genes)
+    paste_sequence.send_keys(Keys.CONTROL + "v")
+    submit_button = browser.find_element_by_id("do-blast")
+    submit_button.click()
+    # Now we wait for the page to finish loading before clicking the download button
+    wait(browser, 200).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, "<div class=loadmask>")))
+    download_button = browser.find_element_by_id("Bacteria-mdlbtn")
+    download_button.click()
+    # browser.close()
+    # browser.quit()
     return
 
 
