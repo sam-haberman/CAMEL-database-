@@ -4,14 +4,16 @@
 
 import pandas as pd
 import re
-import mechanize
 import time
 from selenium import webdriver
+from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import pyperclip
+import os
+from zipfile import ZipFile
 
 
 # it is possible we can work with strains that are not the most popular since we just want fasta
@@ -88,12 +90,21 @@ def locations(file):
 # Now that we have the list of genes and their annotations we submit them to the cell2go website and get the resulting
 # file, mechanize doesn't work so going to try selenium
 # Depending on the browser you use you need to add an executable such as geckodriver (firefox) or chrome driver(chrome)
-# to PATH, have to download file from https://github.com/mozilla/geckodriver/releases/tag/v0.26.0 and use
-# this executable file in the path
+# to PATH, have to download file from https://github.com/mozilla/geckodriver/releases/tag/v0.26.0 (firefox)
+# or https://sites.google.com/a/chromium.org/chromedriver/home (chrome) use
+# this executable file in the path, Firefox wouldn't automatically save the file so switched to Chrome
 def cell2go(genes):
     # first we open up our webpage
-    path = "C:/Users/samue/Desktop/Thesis/geckodriver/geckodriver.exe"
-    browser = webdriver.Firefox(executable_path=path)
+    path = "C:/Users/samue/Desktop/Thesis/geckodriver/chromedriver.exe"
+    options = webdriver.ChromeOptions()
+    prefs = {
+        "download.default_directory": r"C:\Users\samue\PycharmProjects\Thesis",
+        "download.directory_upgrade": "true",
+        "download.prompt_for_download": "false",
+        "disable-popup-blocking": "true"
+    }
+    options.add_experimental_option("prefs", prefs)
+    browser = webdriver.Chrome(executable_path=path, service_log_path='nul', options=options)
     browser.get("http://cello.life.nctu.edu.tw/cello2go/")
     # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
     paste_sequence = browser.find_element_by_name("sequence")
@@ -104,11 +115,32 @@ def cell2go(genes):
     submit_button.click()
     # Now we wait for the page to finish loading before clicking the download button
     wait(browser, 200).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, "<div class=loadmask>")))
-    download_button = browser.find_element_by_id("Bacteria-mdlbtn")
-    download_button.click()
-    # browser.close()
-    # browser.quit()
-    return
+    download = False
+    while not download:
+        try:
+            download_button = browser.find_element_by_id("Bacteria-mdlbtn")
+            download_button.click()
+            download = True
+            # this gives the website enough time to download the entire file
+            time.sleep(50)
+            with open("C:\\Users\\samue\\PycharmProjects\\Thesis\\page_source.html", "w") as f:
+                f.write(browser.page_source)
+        except ElementClickInterceptedException:
+            time.sleep(60)
+    browser.close()
+    browser.quit()
+    Zip_file_results = ZipFile("C:\\Users\\samue\\PycharmProjects\\Thesis\\Cellular_Location_Results.zip", "w")
+    # This html file is ugly but it atleast contains the breakdown of the locations of our genes as well as shows a
+    # rough version of what the results look like (ask Bram and Nikolina)
+    Zip_file_results.write("page_source.html")
+    # File is named weirdly, so renaming it
+    os.rename("C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_reuslt.txt",
+              "C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_results.txt")
+    Zip_file_results.write("cello2go_results.txt")
+    Zip_file_results.close()
+    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_results.txt")
+    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\page_source.html")
+    return "C:\\Users\\samue\\PycharmProjects\\Thesis\\Cellular_Location_Results.zip"
 
 
 genes = locations("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
