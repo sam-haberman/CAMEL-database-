@@ -6,7 +6,7 @@ import pandas as pd
 import re
 import time
 from selenium import webdriver
-from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.support import expected_conditions as EC
@@ -14,6 +14,8 @@ from selenium.webdriver.common.by import By
 import pyperclip
 import os
 from zipfile import ZipFile
+import pyautogui
+import shutil
 
 
 # it is possible we can work with strains that are not the most popular since we just want fasta
@@ -41,7 +43,7 @@ def locations(file):
     # If none of these strains are in our dataset we end the function
     else:
         print("This strain of E. coli is not available right now")
-        return
+        return "False"
     # creates dictionary for our reference strain with key gene name and value fasta sequence
     gene_dict = {}
     gene_name = None
@@ -93,6 +95,7 @@ def locations(file):
 # to PATH, have to download file from https://github.com/mozilla/geckodriver/releases/tag/v0.26.0 (firefox)
 # or https://sites.google.com/a/chromium.org/chromedriver/home (chrome) use
 # this executable file in the path, Firefox wouldn't automatically save the file so switched to Chrome
+# Throughout the function we use time.sleep to have the function wait for pages to load
 def cell2go(genes):
     # first we open up our webpage
     path = "C:/Users/samue/Desktop/Thesis/geckodriver/chromedriver.exe"
@@ -104,7 +107,11 @@ def cell2go(genes):
         "disable-popup-blocking": "true"
     }
     options.add_experimental_option("prefs", prefs)
+    # This makes the window invisible
+    # options.add_argument('--headless')
+    # options.add_argument('window-size=1920x1080')
     browser = webdriver.Chrome(executable_path=path, service_log_path='nul', options=options)
+    browser.maximize_window()
     browser.get("http://cello.life.nctu.edu.tw/cello2go/")
     # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
     paste_sequence = browser.find_element_by_name("sequence")
@@ -122,24 +129,32 @@ def cell2go(genes):
             download_button.click()
             download = True
             # this gives the website enough time to download the entire file
-            time.sleep(50)
-            with open("C:\\Users\\samue\\PycharmProjects\\Thesis\\page_source.html", "w") as f:
-                f.write(browser.page_source)
+            time.sleep(20)
+            pyautogui.hotkey('ctrl', 's')
+            time.sleep(3)
+            pyautogui.typewrite("Complete_Location_Results.html")
+            pyautogui.hotkey('enter')
+            time.sleep(10)
         except ElementClickInterceptedException:
-            time.sleep(60)
+            time.sleep(50)
     browser.close()
     browser.quit()
     Zip_file_results = ZipFile("C:\\Users\\samue\\PycharmProjects\\Thesis\\Cellular_Location_Results.zip", "w")
-    # This html file is ugly but it atleast contains the breakdown of the locations of our genes as well as shows a
-    # rough version of what the results look like (ask Bram and Nikolina)
-    Zip_file_results.write("page_source.html")
+    current_path = os.getcwd()
+    # Have to change this to the default download location of user
+    os.chdir("C:\\Users\\samue\\Downloads")
+    Zip_file_results.write("Complete_Location_Results.html")
+    Zip_file_results.write("Complete_Location_Results_files")
     # File is named weirdly, so renaming it
     os.rename("C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_reuslt.txt",
               "C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_results.txt")
+    os.chdir(current_path)
     Zip_file_results.write("cello2go_results.txt")
     Zip_file_results.close()
+    # clean up files after downloading
     os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_results.txt")
-    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\page_source.html")
+    os.remove("C:\\Users\\samue\\Downloads\\Complete_Location_Results.html")
+    shutil.rmtree("C:\\Users\\samue\\Downloads\\Complete_Location_Results_files")
     return "C:\\Users\\samue\\PycharmProjects\\Thesis\\Cellular_Location_Results.zip"
 
 
