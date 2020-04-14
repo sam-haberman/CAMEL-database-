@@ -107,11 +107,7 @@ def cell2go(genes):
         "disable-popup-blocking": "true"
     }
     options.add_experimental_option("prefs", prefs)
-    # This makes the window invisible
-    # options.add_argument('--headless')
-    # options.add_argument('window-size=1920x1080')
     browser = webdriver.Chrome(executable_path=path, service_log_path='nul', options=options)
-    browser.maximize_window()
     browser.get("http://cello.life.nctu.edu.tw/cello2go/")
     # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
     paste_sequence = browser.find_element_by_name("sequence")
