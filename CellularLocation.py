@@ -98,6 +98,7 @@ def locations(file):
 # Throughout the function we use time.sleep to have the function wait for pages to load
 def cell2go(genes):
     # first we open up our webpage
+    # This path needs to be where the chromedriver executable is stored
     path = "C:/Users/samue/Desktop/Thesis/geckodriver/chromedriver.exe"
     options = webdriver.ChromeOptions()
     prefs = {
