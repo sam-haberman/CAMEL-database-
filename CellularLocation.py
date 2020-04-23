@@ -1,6 +1,6 @@
 # Will add a second source of data to researchers on CAMEL by providing information on the sub-cellular location of the
 # genes that are being mutated, as well as functional gene ontology annotation. CELLO2GO
-
+# Location of files needs to be updated throughout the script based on current directory used
 
 import pandas as pd
 import re
@@ -155,5 +155,5 @@ def cell2go(genes):
     return "C:\\Users\\samue\\PycharmProjects\\Thesis\\Cellular_Location_Results.zip"
 
 
-genes = locations("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
-cell2go(genes)
+# genes = locations("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
+# cell2go(genes)

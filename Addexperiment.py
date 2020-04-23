@@ -8,6 +8,7 @@ from MutFunc_functionality import extract_files
 from MutFunc_functionality import runmutfunc
 from MutFunc_functionality import add_column_description
 from CellularLocation import *
+from Mechismo_functionality import *
 import zipfile
 path = ""
 # Create function to pull all data from excel file, log in and add experiment
@@ -134,16 +135,16 @@ def get_data_and_add_experiment(file, mutfile =""):
     # we check to see if there is a mutation file attached so we can upload it after the experiment is added, file needs
     # to be .xlsx
     if mutfile != "":
-        ##We upload the file to a temporary location on the server
+        # We upload the file to a temporary location on the server
         attachment = {'file': open(mutfile, 'rb')}
         resp = req.post(attach_url, files=attachment, headers=auth_header)
 
-        ##Get the temporary id of the upload
+        # Get the temporary id of the upload
         tmp_uuid = resp.json()['uuid']
 
-        ##Set the attachment field to the tmp id and name the file
-        ##The file will be moved to the correct location
-        dest_file_name = "Mutation Data.xlsx"
+        # Set the attachment field to the tmp id and name the file
+        # The file will be moved to the correct location
+        dest_file_name = "Mutation_Data.xlsx"
         attach_exp = {
             'fields': {
                 '36': {
@@ -163,12 +164,15 @@ def get_data_and_add_experiment(file, mutfile =""):
     # First we have to check the species(starting with just E. Coli)
     if val[1] == "Escherichia coli" and mutfile != "":
         # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
-        mut_df = pd.read_excel(mutfile, sheet_name='Sheet1', header=4)
+        mut_df = pd.read_excel(mutfile, sheet_name='Sheet1', header=4, keep_default_na=False)
         if mut_df.loc[1, "CHROM"] == "NC_000913":
             mut_func_file = runmutfunc(mutfile)
             # Update our mutation excel file with the Mutfunc results and return it as a new file with appropriately
             # detailed headers
             updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
+            mechismo_results = run_mechismo(mutfile)
+            # Add mechismo results to complete mutation dataframe
+            updated_mutation_dataframe = add_mechismo_information(updated_mutation_dataframe, mechismo_results)
             updated_mutation_dataframe.to_excel("Mutation_results.xlsx", index=False)
             add_column_description()
             # add this file to the zip file of mutation results
@@ -184,7 +188,7 @@ def get_data_and_add_experiment(file, mutfile =""):
 
             # Set the attachment field to the tmp id and name the file
             # The file will be moved to the correct location
-            dest_file_name = "Complete MutFunc Results.gz"
+            dest_file_name = "Complete_Mutation_Results.gz"
             attach_exp = {
                 'fields': {
                     '44': {
@@ -195,32 +199,15 @@ def get_data_and_add_experiment(file, mutfile =""):
                 }
             }
             resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
-        list_of_genes = locations(mutfile)
-        # check to see if we can run cell2go with this mutation file, if not we end here
-        if list_of_genes == "False":
-            return
-        cell2go_results = cell2go(list_of_genes)
-        # Now we upload the cell2go results
-        # We upload the file to a temporary location on the server
-        attachment = {'file': open(cell2go_results, 'rb')}
-        resp = req.post(attach_url, files=attachment, headers=auth_header)
+    # After we run our script we remove the local version of the files
+    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
+    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results_complete.xlsx")
+        # list_of_genes = locations(mutfile)
+        # # check to see if we can run cell2go with this mutation file, if not we end here
+        # if list_of_genes == "False":
+        #     return
+        # cell2go_results = cell2go(list_of_genes)
 
-        # Get the temporary id of the upload
-        tmp_uuid = resp.json()['uuid']
-
-        # Set the attachment field to the tmp id and name the file
-        # The file will be moved to the correct location
-        dest_file_name = "Subcellular Locations.zip"
-        attach_exp = {
-            'fields': {
-                '45': {
-                    'new_1': {
-                        'uuid': tmp_uuid,
-                        'filename': dest_file_name}
-                }
-            }
-        }
-        resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
 # Function to add mutation data to experiments, needs to be .xlsx
 
 def add_mutation_to_experiment(mutation_file):
@@ -271,7 +258,7 @@ def add_mutation_to_experiment(mutation_file):
 
     # Set the attachment field to the tmp id and name the file
     # The file will be moved to the correct location
-    dest_file_name = "Mutation Data.xlsx"
+    dest_file_name = "Mutation_Data.xlsx"
     attach_exp = {
         'fields': {
             '36': {
@@ -295,10 +282,13 @@ def add_mutation_to_experiment(mutation_file):
     for key, value in experiments.get("fields").get("1").items():
         if "Escherichia coli" in value:
             # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
-            mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1')
+            mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1', keep_default_na=False)
             if mut_df.loc[1, "CHROM"] == "NC_000913":
                 mut_func_file = runmutfunc(mutation_file)
                 updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
+                mechismo_results = run_mechismo(mutation_file)
+                # Add mechismo results to complete mutation dataframe
+                updated_mutation_dataframe = add_mechismo_information(updated_mutation_dataframe, mechismo_results)
                 updated_mutation_dataframe.to_excel("Mutation_results.xlsx", index=False)
                 add_column_description()
                 zip_open = zipfile.ZipFile(mut_func_file, 'a')
@@ -313,7 +303,7 @@ def add_mutation_to_experiment(mutation_file):
 
                 # Set the attachment field to the tmp id and name the file
                 # The file will be moved to the correct location
-                dest_file_name = "Complete MutFunc Results.gz"
+                dest_file_name = "Complete_Mutation_Results.gz"
                 attach_exp = {
                     'fields': {
                         '44': {
@@ -324,36 +314,20 @@ def add_mutation_to_experiment(mutation_file):
                     }
                 }
                 resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
-            list_of_genes = locations(mutation_file)
-            # check to see if we can run cell2go with this mutation file, if not we end here
-            if list_of_genes == "False":
-                return
-            cell2go_results = cell2go(list_of_genes)
-            # Now we upload the cell2go results
-            # We upload the file to a temporary location on the server
-            attachment = {'file': open(cell2go_results, 'rb')}
-            resp = req.post(attach_url, files=attachment, headers=auth_header)
+            # list_of_genes = locations(mutation_file)
+            # # check to see if we can run cell2go with this mutation file, if not we end here
+            # if list_of_genes == "False":
+            #     return
+            # cell2go_results = cell2go(list_of_genes)
 
-            # Get the temporary id of the upload
-            tmp_uuid = resp.json()['uuid']
+    # After we run our script we remove the local version of the files
+    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
+    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results_complete.xlsx")
 
-            # Set the attachment field to the tmp id and name the file
-            # The file will be moved to the correct location
-            dest_file_name = "Subcellular Locations.zip"
-            attach_exp = {
-                'fields': {
-                    '45': {
-                        'new_1': {
-                            'uuid': tmp_uuid,
-                            'filename': dest_file_name}
-                    }
-                }
-            }
-            resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
 
 def remove_experiment(eid):
 
-    ## URLS
+    # URLS
     base_url = "https://cameldatabase.com/CAMEL/"
     api_url = base_url + "api"
     auth_url = base_url + "auth"
@@ -362,7 +336,7 @@ def remove_experiment(eid):
     field_url = api_url + "/field"
     ref_url = api_url + "/reference"
 
-    ## Credentials
+    # Credentials
     login = ''
     password = ''
 
@@ -370,7 +344,7 @@ def remove_experiment(eid):
         import getpass
         password = getpass.getpass()
 
-    ## Get an authentication token
+    # Get an authentication token
     '''
     All editting operations require a header containing a valid AuthToken.
     A token stays valid for one day.
@@ -378,7 +352,7 @@ def remove_experiment(eid):
     auth_request = req.get(auth_url, auth=(login, password))
     token = auth_request.headers['AuthToken']
 
-    ## Create the header we're going to send along
+    # Create the header we're going to send along
     auth_header = {'AuthToken': token}
 
     exp_id = eid
@@ -386,10 +360,19 @@ def remove_experiment(eid):
     req.delete(added_exp_url, headers=auth_header)
 
 
+# Function that adds mechismo tool related information to our master mutation result dataframe
+# Merge on unique identifier, Start POS
+def add_mechismo_information(mutation_dataframe, mechismo_dataframe):
+
+    df = pd.merge(mutation_dataframe, mechismo_dataframe, left_on="Start POS", right_on="Start POS", how='left')
+    df = df.fillna('')
+    return df
+
+
 # remove_experiment(780)
 # Have to give file with experiment information and either leave id blank or give a number
-# get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
-#                             "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
+get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
+                            "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
 # get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
 # Adding experiments from a folder rather than individually
 # for fname in glob.glob(path + '\\*'):

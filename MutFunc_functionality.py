@@ -65,8 +65,9 @@ def extract_files(mut_func_file, mutation_data_frame):
     # add new columns to our data frame that will be our final results
     # need to also add information about what each column represents
     df = mutation_data_frame
-    is_SNP = df["TYPE"] == "SNP"
-    df = df.loc[is_SNP]
+    # Remove intergenic mutations, but keep everything else
+    genes = df['GEN'] != "NA"
+    df = df[genes]
     columns_to_add = ["", "refaa", "altaa", "impact", "score", "ic", "ddg", "pdb_id", "sequence", "accession",
                       "modification_type", "site_function", "function_evidence", "predicted_kinase", "probability_loss",
                       "knockout_pvalue", "tf"]
@@ -210,7 +211,7 @@ def add_column_description():
     sheet = wb.ActiveSheet
     # add comments
     sheets = ["O1", "P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1",
-              "AB1", "AC1", "AD1"]
+              "AB1", "AC1", "AD1", "AE1", "AF1"]
     comments = ["Reference amino acid", "Mutated amino acid",
                 "Is the mutation predicted to impact function? '1' if yes, '0' if no",
                 "Sift score, any mutation with a score below 0.05 is considered deleterious ",
@@ -222,7 +223,11 @@ def add_column_description():
                 "Evidence of site function, if any", "Kinase predicted to lose phosphorylation at this site",
                 "Probability of kinase losing phosphorylation at this site",
                 "P-value of over or under-expression for the downstream gene when the transcription factor is knocked out",
-                "Transcription factor predicted to bind this binding site"]
+                "Transcription factor predicted to bind this binding site",
+                "protein-protein interactions: gene name of interactor, protein-chemical interactions: '[CHEM:type:id]'"
+                "DNA/RNA interactions: '[DNA/RNA]', Mechismo score for the interaction - The higher the Mechismo Score,"
+                " the more likely a particular mutation or modification is to affect interactions with other molecules."
+                , "Total combined Mechismo interaction score for all molecules"]
     for column, comment in zip(sheets, comments):
         sheet.Range(column).AddComment()
         sheet.Range(column).Comment.Visible = False
