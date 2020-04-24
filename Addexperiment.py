@@ -172,8 +172,18 @@ def get_data_and_add_experiment(file, mutfile =""):
             updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
             mechismo_results = run_mechismo(mutfile)
             # Add mechismo results to complete mutation dataframe
-            updated_mutation_dataframe = add_mechismo_information(updated_mutation_dataframe, mechismo_results)
-            updated_mutation_dataframe.to_excel("Mutation_results.xlsx", index=False)
+            # Add mechismo results to complete mutation dataframe
+            df = pd.merge(updated_mutation_dataframe, mechismo_results, left_on="Start POS", right_on="Start POS",
+                          how='left')
+            df = df.fillna('')
+            list_of_genes = locations(mutfile)
+            # check to see if we can run cell2go with this mutation file, if not we end here
+            if list_of_genes == "False":
+                return
+            cell2go_results = cello2go(list_of_genes)
+            df = pd.merge(df, cell2go_results, left_on="Start POS", right_on="Start POS", how='left')
+            df = df.fillna('')
+            df.to_excel("Mutation_results.xlsx", index=False)
             add_column_description()
             # add this file to the zip file of mutation results
             zip_open = zipfile.ZipFile(mut_func_file, 'a')
@@ -202,11 +212,7 @@ def get_data_and_add_experiment(file, mutfile =""):
     # After we run our script we remove the local version of the files
     os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
     os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results_complete.xlsx")
-        # list_of_genes = locations(mutfile)
-        # # check to see if we can run cell2go with this mutation file, if not we end here
-        # if list_of_genes == "False":
-        #     return
-        # cell2go_results = cell2go(list_of_genes)
+
 
 # Function to add mutation data to experiments, needs to be .xlsx
 
@@ -288,8 +294,17 @@ def add_mutation_to_experiment(mutation_file):
                 updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
                 mechismo_results = run_mechismo(mutation_file)
                 # Add mechismo results to complete mutation dataframe
-                updated_mutation_dataframe = add_mechismo_information(updated_mutation_dataframe, mechismo_results)
-                updated_mutation_dataframe.to_excel("Mutation_results.xlsx", index=False)
+                df = pd.merge(updated_mutation_dataframe, mechismo_results, left_on="Start POS", right_on="Start POS",
+                              how='left')
+                df = df.fillna('')
+                list_of_genes = locations(mutation_file)
+                # check to see if we can run cell2go with this mutation file, if not we end here
+                if list_of_genes == "False":
+                    return
+                cell2go_results = cello2go(list_of_genes)
+                df = pd.merge(df, cell2go_results, left_on="Start POS", right_on="Start POS", how='left')
+                df = df.fillna("")
+                df.to_excel("Mutation_results.xlsx", index=False)
                 add_column_description()
                 zip_open = zipfile.ZipFile(mut_func_file, 'a')
                 zip_open.write("Mutation_results_complete.xlsx")
@@ -314,11 +329,6 @@ def add_mutation_to_experiment(mutation_file):
                     }
                 }
                 resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
-            # list_of_genes = locations(mutation_file)
-            # # check to see if we can run cell2go with this mutation file, if not we end here
-            # if list_of_genes == "False":
-            #     return
-            # cell2go_results = cell2go(list_of_genes)
 
     # After we run our script we remove the local version of the files
     os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
@@ -360,19 +370,10 @@ def remove_experiment(eid):
     req.delete(added_exp_url, headers=auth_header)
 
 
-# Function that adds mechismo tool related information to our master mutation result dataframe
-# Merge on unique identifier, Start POS
-def add_mechismo_information(mutation_dataframe, mechismo_dataframe):
-
-    df = pd.merge(mutation_dataframe, mechismo_dataframe, left_on="Start POS", right_on="Start POS", how='left')
-    df = df.fillna('')
-    return df
-
-
 # remove_experiment(780)
 # Have to give file with experiment information and either leave id blank or give a number
-get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
-                            "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
+# get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
+#                             "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
 # get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
 # Adding experiments from a folder rather than individually
 # for fname in glob.glob(path + '\\*'):

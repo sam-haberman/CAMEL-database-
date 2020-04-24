@@ -69,7 +69,7 @@ def locations(file):
     final_list = ""
     for rownumber, mutation in df.iterrows():
         for gene in re.split(', |;', mutation[6]):
-            final_list += "> %s %s %s %s %s %s\n" % (mutation[3], mutation[4], mutation[5], gene, mutation[8], mutation[9])
+            final_list += "> %s\n" % str((mutation[1]))
             try:
                 final_list += str(gene_dict[gene]) + "\n"
             except KeyError:
@@ -96,64 +96,64 @@ def locations(file):
 # or https://sites.google.com/a/chromium.org/chromedriver/home (chrome) use
 # this executable file in the path, Firefox wouldn't automatically save the file so switched to Chrome
 # Throughout the function we use time.sleep to have the function wait for pages to load
-def cell2go(genes):
-    # first we open up our webpage
-    # This path needs to be where the chromedriver executable is stored
-    path = "C:/Users/samue/Desktop/Thesis/geckodriver/chromedriver.exe"
-    options = webdriver.ChromeOptions()
-    prefs = {
-        "download.default_directory": r"C:\Users\samue\PycharmProjects\Thesis",
-        "download.directory_upgrade": "true",
-        "download.prompt_for_download": "false",
-        "disable-popup-blocking": "true"
-    }
-    options.add_experimental_option("prefs", prefs)
-    browser = webdriver.Chrome(executable_path=path, service_log_path='nul', options=options)
-    browser.get("http://cello.life.nctu.edu.tw/cello2go/")
-    # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
-    paste_sequence = browser.find_element_by_name("sequence")
-    paste_sequence.clear()
-    pyperclip.copy(genes)
-    paste_sequence.send_keys(Keys.CONTROL + "v")
-    submit_button = browser.find_element_by_id("do-blast")
-    submit_button.click()
-    # Now we wait for the page to finish loading before clicking the download button
-    wait(browser, 200).until(EC.invisibility_of_element_located((By.CSS_SELECTOR, "<div class=loadmask>")))
-    download = False
-    while not download:
-        try:
-            download_button = browser.find_element_by_id("Bacteria-mdlbtn")
-            download_button.click()
-            download = True
-            # this gives the website enough time to download the entire file
-            time.sleep(20)
-            pyautogui.hotkey('ctrl', 's')
-            time.sleep(3)
-            pyautogui.typewrite("Complete_Location_Results.html")
-            pyautogui.hotkey('enter')
-            time.sleep(10)
-        except ElementClickInterceptedException:
-            time.sleep(50)
-    browser.close()
-    browser.quit()
-    Zip_file_results = ZipFile("C:\\Users\\samue\\PycharmProjects\\Thesis\\Cellular_Location_Results.zip", "w")
-    current_path = os.getcwd()
-    # Have to change this to the default download location of user
-    os.chdir("C:\\Users\\samue\\Downloads")
-    Zip_file_results.write("Complete_Location_Results.html")
-    Zip_file_results.write("Complete_Location_Results_files")
-    # File is named weirdly, so renaming it
-    os.rename("C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_reuslt.txt",
-              "C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_results.txt")
-    os.chdir(current_path)
-    Zip_file_results.write("cello2go_results.txt")
-    Zip_file_results.close()
-    # clean up files after downloading
-    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\cello2go_results.txt")
-    os.remove("C:\\Users\\samue\\Downloads\\Complete_Location_Results.html")
-    shutil.rmtree("C:\\Users\\samue\\Downloads\\Complete_Location_Results_files")
-    return "C:\\Users\\samue\\PycharmProjects\\Thesis\\Cellular_Location_Results.zip"
 
+def cello2go(genes):
+    cell2go_columns = ["Start POS", "Cello2go probabilities", "Location"]
+    location_results = pd.DataFrame(columns=cell2go_columns)
+    updated = genes.split(">")[1:]
+    for sequence in updated:
+        sequence = ">" + sequence
+        # Check to see if we did not find a gene name for our mutation and therefore we do not have a sequence
+        if "G" not in sequence:
+            continue
+        position = (sequence.split("\n"))[0].strip(" ")
+        # first we open up our webpage
+        # This path needs to be where the chromedriver executable is stored
+        path = "C:/Users/samue/Desktop/Thesis/geckodriver/chromedriver.exe"
+        options = webdriver.ChromeOptions()
+        prefs = {
+            "download.default_directory": r"C:\Users\samue\PycharmProjects\Thesis",
+            "download.directory_upgrade": "true",
+            "download.prompt_for_download": "false",
+            "disable-popup-blocking": "true"
+        }
+        options.add_experimental_option("prefs", prefs)
+        browser = webdriver.Chrome(executable_path=path, service_log_path='nul', options=options)
+        browser.get("http://cello.life.nctu.edu.tw/cello2go/")
+        # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
+        paste_sequence = browser.find_element_by_name("sequence")
+        paste_sequence.clear()
+        pyperclip.copy(sequence)
+        paste_sequence.send_keys(Keys.CONTROL + "v")
+        submit_button = browser.find_element_by_id("do-blast")
+        submit_button.click()
+        time.sleep(6)
+        location_values = []
+        int_values = []
+        # Scrape page
+        ele = browser.find_elements_by_xpath("//table[@id='Bacteria-gramn']")
+        for e in ele:
+            for td in e.find_elements_by_xpath(".//td"):
+                location_values.append(td.text)
+        # Update values from string to int to get max value
+        for i in location_values[1::2]:
+            int_values.append(float(i))
+        if max(int_values) == int_values[0]:
+            mutation_location = "Extracellular"
+        elif max(int_values) == int_values[1]:
+            mutation_location = "Outermembrane"
+        elif max(int_values) == int_values[2]:
+            mutation_location = "Periplasmic"
+        elif max(int_values) == int_values[3]:
+            mutation_location = "Innermembrane"
+        else:
+            mutation_location = "Cytoplasmic"
+        location_results.loc[len(location_results)] = [position, location_values, mutation_location]
+        browser.close()
+        browser.quit()
+    return location_results
 
-# genes = locations("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
-# cell2go(genes)
+genes = locations("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
+
+cello2go(genes)
+
