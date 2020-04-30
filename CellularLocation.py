@@ -69,7 +69,7 @@ def locations(file):
     final_list = ""
     for rownumber, mutation in df.iterrows():
         for gene in re.split(', |;', mutation[6]):
-            final_list += "> %s\n" % str((mutation[1]))
+            final_list += "> %s\n" % (mutation[1])
             try:
                 final_list += str(gene_dict[gene]) + "\n"
             except KeyError:
@@ -123,6 +123,8 @@ def cello2go(genes):
         # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
         paste_sequence = browser.find_element_by_name("sequence")
         paste_sequence.clear()
+        # Testing why one did not work
+        # print(sequence)
         pyperclip.copy(sequence)
         paste_sequence.send_keys(Keys.CONTROL + "v")
         submit_button = browser.find_element_by_id("do-blast")
@@ -148,12 +150,12 @@ def cello2go(genes):
             mutation_location = "Innermembrane"
         else:
             mutation_location = "Cytoplasmic"
-        location_results.loc[len(location_results)] = [position, location_values, mutation_location]
+        location_results.loc[len(location_results)] = [float(position.split(" ")[1]), ",".join(location_values), str(mutation_location)]
         browser.close()
         browser.quit()
     return location_results
 
-genes = locations("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
-
-cello2go(genes)
+# genes = locations("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
+#
+# cello2go(genes)
 

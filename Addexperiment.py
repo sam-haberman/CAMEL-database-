@@ -172,7 +172,6 @@ def get_data_and_add_experiment(file, mutfile =""):
             updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
             mechismo_results = run_mechismo(mutfile)
             # Add mechismo results to complete mutation dataframe
-            # Add mechismo results to complete mutation dataframe
             df = pd.merge(updated_mutation_dataframe, mechismo_results, left_on="Start POS", right_on="Start POS",
                           how='left')
             df = df.fillna('')
@@ -183,6 +182,8 @@ def get_data_and_add_experiment(file, mutfile =""):
             cell2go_results = cello2go(list_of_genes)
             df = pd.merge(df, cell2go_results, left_on="Start POS", right_on="Start POS", how='left')
             df = df.fillna('')
+            # Need to drop duplicates here
+            df = df.drop_duplicates()
             df.to_excel("Mutation_results.xlsx", index=False)
             add_column_description()
             # add this file to the zip file of mutation results
