@@ -25,6 +25,8 @@ def runmutfunc(file):
     # Merge all parts together so they can be added as one entry per line
     SNP_list = pd.DataFrame()
     SNP_list["SNPs"] = "chr" + " " + df["Start POS"].astype(str) + " " + df["REF"] + " " + df["ALT"]
+    # I do not think we need to keep duplicated entries here as we add back in on start pos in the second function
+    SNP_list = SNP_list.drop_duplicates()
     # time now to learn how to access the website through python, looking at the mechanize package
     br = mechanize.Browser()
     br.open("http://www.mutfunc.com/submit#")
@@ -37,6 +39,11 @@ def runmutfunc(file):
     for i in range(len(SNP_list)):
         mutations = mutations + SNP_list["SNPs"].iloc[i] + "\n"
     br.form['muts_text'] = mutations
+
+    # If the number of mutations is too large this will not work. A way of handling this would be to split your
+    # mutations into parts and then later on go through each part of the results you save. Needs to be extremely large
+    # though as 1500+ mutations works.
+
     br.submit()
     base_url = br.geturl()
     # cannot figure out how to have the url updated from the wait page to the results page, even though it is redirected
@@ -96,21 +103,26 @@ def extract_files(mut_func_file, mutation_data_frame):
     p_sites.close()
     # now we do start_stop
     start_stop = zip_file_object.open(zip_file_object.namelist()[1])
-    start_stop_mutations = pd.read_csv(start_stop, skiprows=11, header=None, delimiter='\t')
-    if start_stop_mutations.empty:
+    # Need to try/except block this file because it is the only one that does not include a header for Mutfunc results
+    # and can cause some issues because of this since it has been empty most of the time
+    try:
+        start_stop_mutations = pd.read_csv(start_stop, skiprows=11, header=None, delimiter='\t', index_col=False)
+        if start_stop_mutations.empty:
+            pass
+        else:
+            # loop through mutations and
+            index = 0
+            while index < start_stop_mutations.shape[0]:
+                for rownumber, mutation in df.loc[df['Start POS'] == start_stop_mutations.loc[index, 1]].iterrows():
+                    df.loc[rownumber, "refaa"] = start_stop_mutations.loc[index, 6]
+                    df.loc[rownumber, "altaa"] = start_stop_mutations.loc[index, 7]
+                    df.loc[rownumber, "impact"] = start_stop_mutations.loc[index, 8]
+                index += 1
+    except:
         pass
-    else:
-        # loop through mutations and
-        index = 0
-        while index < start_stop_mutations.shape[0]:
-            for rownumber, mutation in df.loc[df['Start POS'] == start_stop_mutations.loc[index, 1]].iterrows():
-                df.loc[rownumber, "refaa"] = start_stop_mutations.loc[index, 6]
-                df.loc[rownumber, "altaa"] = start_stop_mutations.loc[index, 7]
-                df.loc[rownumber, "impact"] = start_stop_mutations.loc[index, 8]
-            index += 1
     start_stop.close()
     interfaces = zip_file_object.open(zip_file_object.namelist()[2])
-    interfaces_mutations = pd.read_csv(interfaces, skiprows=20, header=0, delimiter="\t")
+    interfaces_mutations = pd.read_csv(interfaces, skiprows=20, header=0, delimiter="\t", index_col=False)
 
     if interfaces_mutations.empty:
         pass
@@ -126,7 +138,7 @@ def extract_files(mut_func_file, mutation_data_frame):
             index += 1
     interfaces.close()
     other_ptms = zip_file_object.open(zip_file_object.namelist()[3])
-    other_ptms_mutations = pd.read_csv(other_ptms, skiprows=16, header=0, delimiter="\t")
+    other_ptms_mutations = pd.read_csv(other_ptms, skiprows=16, header=0, delimiter="\t", index_col=False)
     if other_ptms_mutations.empty:
         pass
     else:
@@ -140,7 +152,7 @@ def extract_files(mut_func_file, mutation_data_frame):
             index += 1
     other_ptms.close()
     linear_motifs = zip_file_object.open(zip_file_object.namelist()[4])
-    linear_motifs_mutations = pd.read_csv(linear_motifs, skiprows=21, header=0, delimiter="\t")
+    linear_motifs_mutations = pd.read_csv(linear_motifs, skiprows=21, header=0, delimiter="\t", index_col=False)
     if linear_motifs_mutations.empty:
         pass
     else:
@@ -155,7 +167,7 @@ def extract_files(mut_func_file, mutation_data_frame):
             index += 1
     linear_motifs.close()
     conservation = zip_file_object.open(zip_file_object.namelist()[5])
-    conservation_mutations = pd.read_csv(conservation, skiprows=16, header=0, delimiter="\t")
+    conservation_mutations = pd.read_csv(conservation, skiprows=16, header=0, delimiter="\t", index_col=False)
     if conservation_mutations.empty:
         pass
     else:
@@ -170,7 +182,7 @@ def extract_files(mut_func_file, mutation_data_frame):
             index += 1
     conservation.close()
     stability = zip_file_object.open(zip_file_object.namelist()[6])
-    stability_mutations = pd.read_csv(stability, skiprows=17, header=0, delimiter="\t")
+    stability_mutations = pd.read_csv(stability, skiprows=17, header=0, delimiter="\t", index_col=False)
     if stability_mutations.empty:
         pass
     else:
@@ -185,7 +197,7 @@ def extract_files(mut_func_file, mutation_data_frame):
             index += 1
     stability.close()
     tfbs = zip_file_object.open(zip_file_object.namelist()[7])
-    tfbs_mutations = pd.read_csv(tfbs, skiprows=28, header=0, delimiter="\t")
+    tfbs_mutations = pd.read_csv(tfbs, skiprows=28, header=0, delimiter="\t", index_col=False)
     if tfbs_mutations.empty:
         pass
     else:
@@ -239,9 +251,6 @@ def add_column_description():
     xl.Quit()
 
 
-
-
-
-# runmutfunc("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
+# runmutfunc("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/C321deltaAearlyfix.csv.xlsx")
 # extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz",
 #               "C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")

@@ -1,7 +1,6 @@
 import glob
 from MutFunc_functionality import extract_files
 from MutFunc_functionality import runmutfunc
-from MutFunc_functionality import add_column_description
 from CellularLocation import *
 from Mechismo_functionality import *
 import pandas as pd
@@ -30,8 +29,8 @@ def Collect_Data(mutfile):
         # Need to drop duplicates here
         df = df.drop_duplicates()
         df.to_excel(mutfile + "updated.xlsx", index=False)
-        add_column_description()
 
 
-for file in glob.glob(path + '\\*'):
+# Collect_Data("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42CTenaillonAra.csv.xlsx")
+for file in glob.glob("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Files_for_tools" + '\\*'):
     Collect_Data(file)

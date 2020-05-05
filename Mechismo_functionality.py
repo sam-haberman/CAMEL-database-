@@ -42,7 +42,7 @@ def run_mechismo(mutation_file):
     br.form["stringency"] = ["low"]
     br.submit()
     # No direct way to check its done so just pause x amount of time
-    time.sleep(50)
+    time.sleep(300)
     file_url = br.geturl()
     url = ""
     for i in file_url:
