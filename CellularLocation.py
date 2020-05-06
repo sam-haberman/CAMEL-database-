@@ -98,6 +98,7 @@ def locations(file):
 # Throughout the function we use time.sleep to have the function wait for pages to load
 
 def cello2go(genes):
+    old_position = ""
     cell2go_columns = ["Start POS", "Cello2go probabilities", "Location"]
     location_results = pd.DataFrame(columns=cell2go_columns)
     updated = genes.split(">")[1:]
@@ -107,6 +108,9 @@ def cello2go(genes):
         if "G" not in sequence:
             continue
         position = (sequence.split("\n"))[0].strip(" ")
+        if position == old_position:
+            continue
+        old_position = position
         # first we open up our webpage
         # This path needs to be where the chromedriver executable is stored
         path = "C:/Users/samue/Desktop/Thesis/geckodriver/chromedriver.exe"
