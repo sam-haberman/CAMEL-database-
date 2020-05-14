@@ -83,6 +83,7 @@ def mutTranslate(csvfile):
         # sequence was added and how many bp it was, this is for the normal case of mobility
         if data[j][3] == "MOB":
             if data[j][4][0] == "I":
+                data[j][3] = "INS"
                 temp = re.split(" [+]", data[j][4])
                 data[j][4] = ""
                 data[j][5] = temp[0]
@@ -104,18 +105,23 @@ def mutTranslate(csvfile):
             data[j][7] = ""
         # handling multiple substitutions by the number of bases changed
         if data[j][3] == "SUB":
+            data[j][3] = "MNV"
             subsplit = re.split("→", data[j][4])
-            data[j][2] = int(data[j][1].replace(',', "")) + int(re.split(" ",subsplit[0])[0])
+            data[j][2] = int(data[j][1].replace(',', "")) + int(re.split(" ", subsplit[0])[0])
             data[j][4] = ""
             data[j][5] = subsplit[1]
         # inversion mutations, inversion length is added to position start to signify length of the inversion
         if data[j][3] == "INV":
             invsplit = re.split(" ", data[j][4])
-            data[j][2] = int(data[j][1].replace(',', "")) + int(re.split(" ",subsplit[0])[0])
+            data[j][2] = int(data[j][1].replace(',', "")) + int(re.split(" ", subsplit[0])[0])
             data[j][4] = ""
-        # gene conversion mutations
-        # if data[j][3] == "CON":
-        #     #waiting for input
+        # gene conversion mutations update based on this (REPL (a change of 2 or more bases with a change in length)
+        # as it involves the simultaneous deletion of a segment and the insertion of a new segment
+        # (copied from somewhere in the genome). Start and End would be the region in the reference that was
+        # deleted with ALT showing the new sequence (which can be long or undefined).
+        if data[j][3] == "CON":
+            data[j][3] = "REPL"
+
 
         j += 1
     # Loop to do multiple mutations per line
@@ -235,5 +241,5 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
 
 # mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Files_to_convert/OxidizeMe.csv')
 # Goes through every file in the folder and runs our function to convert the CSV file into our template
-# for file in glob.glob(path + '\\*'):
-#     mutTranslate(file)
+for file in glob.glob(path + '\\*'):
+    mutTranslate(file)

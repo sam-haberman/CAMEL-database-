@@ -133,7 +133,7 @@ def cello2go(genes):
         paste_sequence.send_keys(Keys.CONTROL + "v")
         submit_button = browser.find_element_by_id("do-blast")
         submit_button.click()
-        time.sleep(6)
+        time.sleep(9)
         location_values = []
         int_values = []
         # Scrape page
@@ -144,6 +144,16 @@ def cello2go(genes):
         # Update values from string to int to get max value
         for i in location_values[1::2]:
             int_values.append(float(i))
+        # sometimes it doesn't pull the values so we can try this again if it fails then pull values a second time
+        # just in case, testing this
+        if not int_values:
+            ele = browser.find_elements_by_xpath("//table[@id='Bacteria-gramn']")
+            for e in ele:
+                for td in e.find_elements_by_xpath(".//td"):
+                    location_values.append(td.text)
+            # Update values from string to int to get max value
+            for i in location_values[1::2]:
+                int_values.append(float(i))
         if max(int_values) == int_values[0]:
             mutation_location = "Extracellular"
         elif max(int_values) == int_values[1]:

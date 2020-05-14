@@ -26,7 +26,7 @@ def get_data_and_add_experiment(file, mutfile =""):
     # Take each value that was included as part of the metadata and is not left blank
     val = df.loc[0, :].values.tolist()
     # Convert data to proper type for updating to database (making everything JSON serializable)
-    integer_fields = [3, 16, 17, 25, 27, 28, 29, 32, 33]
+    integer_fields = [3, 16, 17, 26, 27, 28, 29, 32, 33,38]
     bool_fields = [8, 10, 12, 14, 19, 23, 40]
     double_fields = [30]
     entry = 0
@@ -39,7 +39,6 @@ def get_data_and_add_experiment(file, mutfile =""):
             elif entry in double_fields:
                 val[entry] = float(val[entry])
         entry += 1
-
     # Create fields dictionary and check for multiple entries by looking for a semicolon
     start = 1
     fielddict = {}
@@ -129,6 +128,7 @@ def get_data_and_add_experiment(file, mutfile =""):
     # It will be added to the database
     # The JSON answer will be the same experiment, but with an assigned ID
     answer = req.post(exp_url, headers=auth_header, json=new_experiment).json()
+    print(answer)
     exp_id = answer['id']
     added_exp_url = exp_url + "/" + str(exp_id)
 
@@ -210,9 +210,9 @@ def get_data_and_add_experiment(file, mutfile =""):
                 }
             }
             resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
-    # After we run our script we remove the local version of the files
-    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
-    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results_complete.xlsx")
+        # After we run our script we remove the local version of the files
+        os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
+        os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results_complete.xlsx")
 
 
 # Function to add mutation data to experiments, needs to be .xlsx

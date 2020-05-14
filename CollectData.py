@@ -32,5 +32,5 @@ def Collect_Data(mutfile):
 
 
 # Collect_Data("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42CTenaillonAra.csv.xlsx")
-for file in glob.glob("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Files_for_tools" + '\\*'):
-    Collect_Data(file)
+# for file in glob.glob("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Files_for_tools" + '\\*'):
+#     Collect_Data(file)
