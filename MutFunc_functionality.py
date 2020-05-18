@@ -15,16 +15,21 @@ import win32com.client
 
 
 def runmutfunc(file):
-    df = pd.read_excel(file, header=4)
+    df = pd.read_excel(file, header=4, keep_default_na=False)
     # Here we filter to only keep SNP mutations
     is_SNP = df['TYPE'] == "SNP"
     df = df[is_SNP]
+    df = df.reset_index()
+    genes = df['GEN'] != "NA"
+    df = df[genes]
+    df = df.reset_index()
     # drop duplicates
     df = df.drop_duplicates()
     # Take only data from the SNPs that we want for checking in MutFunc
     # Merge all parts together so they can be added as one entry per line
     SNP_list = pd.DataFrame()
-    SNP_list["SNPs"] = "chr" + " " + df["Start POS"].astype(str) + " " + df["REF"] + " " + df["ALT"]
+    # SNP_list["SNPs"] = "chr" + " " + df["Start POS"].astype(str) + " " + df["REF"] + " " + df["ALT"]
+    SNP_list["SNPs"] = df["GEN"] + " " + df["∆AA"].astype(str)
     # I do not think we need to keep duplicated entries here as we add back in on start pos in the second function
     SNP_list = SNP_list.drop_duplicates()
     # time now to learn how to access the website through python, looking at the mechanize package
@@ -75,6 +80,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     # Remove intergenic mutations, but keep everything else
     genes = df['GEN'] != "NA"
     df = df[genes]
+    df = df.reset_index()
     columns_to_add = ["", "refaa", "altaa", "impact", "score", "ic", "ddg", "pdb_id", "sequence", "accession",
                       "modification_type", "site_function", "function_evidence", "predicted_kinase", "probability_loss",
                       "knockout_pvalue", "tf"]
@@ -251,6 +257,6 @@ def add_column_description():
     xl.Quit()
 
 
-# runmutfunc("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/C321deltaAearlyfix.csv.xlsx")
+# runmutfunc("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")
 # extract_files("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx.gz",
 #               "C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/42C.csv.xlsx")

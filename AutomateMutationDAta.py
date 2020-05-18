@@ -241,5 +241,5 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
 
 # mutTranslate('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Files_to_convert/OxidizeMe.csv')
 # Goes through every file in the folder and runs our function to convert the CSV file into our template
-for file in glob.glob(path + '\\*'):
-    mutTranslate(file)
+# for file in glob.glob(path + '\\*'):
+#     mutTranslate(file)

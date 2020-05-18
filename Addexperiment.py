@@ -163,44 +163,42 @@ def get_data_and_add_experiment(file, mutfile =""):
     # the standard most popular strain for both
     # First we have to check the species(starting with just E. Coli)
     if val[1] == "Escherichia coli" and mutfile != "":
-        # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
         mut_df = pd.read_excel(mutfile, sheet_name='Sheet1', header=4, keep_default_na=False)
-        if mut_df.loc[1, "CHROM"] == "NC_000913":
-            mut_func_file = runmutfunc(mutfile)
-            # Update our mutation excel file with the Mutfunc results and return it as a new file with appropriately
-            # detailed headers
-            updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
-            mechismo_results = run_mechismo(mutfile)
-            # Add mechismo results to complete mutation dataframe
-            df = pd.merge(updated_mutation_dataframe, mechismo_results, left_on="Start POS", right_on="Start POS",
+        mut_func_file = runmutfunc(mutfile)
+        # Update our mutation excel file with the Mutfunc results and return it as a new file with appropriately
+        # detailed headers
+        updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
+        mechismo_results = run_mechismo(mutfile)
+        # Add mechismo results to complete mutation dataframe
+        df = pd.merge(updated_mutation_dataframe, mechismo_results, left_on="Start POS", right_on="Start POS",
                           how='left')
-            df = df.fillna('')
-            list_of_genes = locations(mutfile)
-            # check to see if we can run cell2go with this mutation file, if not we end here
-            if list_of_genes == "False":
-                return
-            cell2go_results = cello2go(list_of_genes)
-            df = pd.merge(df, cell2go_results, left_on="Start POS", right_on="Start POS", how='left')
-            df = df.fillna('')
-            # Need to drop duplicates here
-            df = df.drop_duplicates()
-            df.to_excel("Mutation_results.xlsx", index=False)
-            add_column_description()
-            # add this file to the zip file of mutation results
-            zip_open = zipfile.ZipFile(mut_func_file, 'a')
-            zip_open.write("Mutation_results_complete.xlsx")
-            zip_open.close()
-            # We upload the file to a temporary location on the server
-            attachment = {'file': open(mut_func_file, 'rb')}
-            resp = req.post(attach_url, files=attachment, headers=auth_header)
+        df = df.fillna('')
+        list_of_genes = locations(mutfile)
+        # check to see if we can run cell2go with this mutation file, if not we end here
+        if list_of_genes == "False":
+            return
+        cell2go_results = cello2go(list_of_genes)
+        df = pd.merge(df, cell2go_results, left_on="Start POS", right_on="Start POS", how='left')
+        df = df.fillna('')
+        # Need to drop duplicates here
+        df = df.drop_duplicates()
+        df.to_excel("Mutation_results.xlsx", index=False)
+        add_column_description()
+        # add this file to the zip file of mutation results
+        zip_open = zipfile.ZipFile(mut_func_file, 'a')
+        zip_open.write("Mutation_results_complete.xlsx")
+        zip_open.close()
+        # We upload the file to a temporary location on the server
+        attachment = {'file': open(mut_func_file, 'rb')}
+        resp = req.post(attach_url, files=attachment, headers=auth_header)
 
-            # Get the temporary id of the upload
-            tmp_uuid = resp.json()['uuid']
+        # Get the temporary id of the upload
+        tmp_uuid = resp.json()['uuid']
 
-            # Set the attachment field to the tmp id and name the file
-            # The file will be moved to the correct location
-            dest_file_name = "Complete_Mutation_Results.gz"
-            attach_exp = {
+        # Set the attachment field to the tmp id and name the file
+        # The file will be moved to the correct location
+        dest_file_name = "Complete_Mutation_Results.gz"
+        attach_exp = {
                 'fields': {
                     '44': {
                         'new_1': {
@@ -209,7 +207,7 @@ def get_data_and_add_experiment(file, mutfile =""):
                     }
                 }
             }
-            resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
+        resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
         # After we run our script we remove the local version of the files
         os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
         os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results_complete.xlsx")
@@ -290,37 +288,36 @@ def add_mutation_to_experiment(mutation_file):
         if "Escherichia coli" in value:
             # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
             mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1', keep_default_na=False)
-            if mut_df.loc[1, "CHROM"] == "NC_000913":
-                mut_func_file = runmutfunc(mutation_file)
-                updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
-                mechismo_results = run_mechismo(mutation_file)
-                # Add mechismo results to complete mutation dataframe
-                df = pd.merge(updated_mutation_dataframe, mechismo_results, left_on="Start POS", right_on="Start POS",
+            mut_func_file = runmutfunc(mutation_file)
+            updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
+            mechismo_results = run_mechismo(mutation_file)
+            # Add mechismo results to complete mutation dataframe
+            df = pd.merge(updated_mutation_dataframe, mechismo_results, left_on="Start POS", right_on="Start POS",
                               how='left')
-                df = df.fillna('')
-                list_of_genes = locations(mutation_file)
-                # check to see if we can run cell2go with this mutation file, if not we end here
-                if list_of_genes == "False":
-                    return
-                cell2go_results = cello2go(list_of_genes)
-                df = pd.merge(df, cell2go_results, left_on="Start POS", right_on="Start POS", how='left')
-                df = df.fillna("")
-                df.to_excel("Mutation_results.xlsx", index=False)
-                add_column_description()
-                zip_open = zipfile.ZipFile(mut_func_file, 'a')
-                zip_open.write("Mutation_results_complete.xlsx")
-                zip_open.close()
-                # We upload the file to a temporary location on the server
-                attachment = {'file': open(mut_func_file, 'rb')}
-                resp = req.post(attach_url, files=attachment, headers=auth_header)
+            df = df.fillna('')
+            list_of_genes = locations(mutation_file)
+            # check to see if we can run cell2go with this mutation file, if not we end here
+            if list_of_genes == "False":
+                return
+            cell2go_results = cello2go(list_of_genes)
+            df = pd.merge(df, cell2go_results, left_on="Start POS", right_on="Start POS", how='left')
+            df = df.fillna("")
+            df.to_excel("Mutation_results.xlsx", index=False)
+            add_column_description()
+            zip_open = zipfile.ZipFile(mut_func_file, 'a')
+            zip_open.write("Mutation_results_complete.xlsx")
+            zip_open.close()
+            # We upload the file to a temporary location on the server
+            attachment = {'file': open(mut_func_file, 'rb')}
+            resp = req.post(attach_url, files=attachment, headers=auth_header)
 
-                # Get the temporary id of the upload
-                tmp_uuid = resp.json()['uuid']
+            # Get the temporary id of the upload
+            tmp_uuid = resp.json()['uuid']
 
-                # Set the attachment field to the tmp id and name the file
-                # The file will be moved to the correct location
-                dest_file_name = "Complete_Mutation_Results.gz"
-                attach_exp = {
+            # Set the attachment field to the tmp id and name the file
+            # The file will be moved to the correct location
+            dest_file_name = "Complete_Mutation_Results.gz"
+            attach_exp = {
                     'fields': {
                         '44': {
                             'new_1': {
@@ -329,7 +326,7 @@ def add_mutation_to_experiment(mutation_file):
                         }
                     }
                 }
-                resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
+            resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
 
     # After we run our script we remove the local version of the files
     os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
@@ -375,7 +372,7 @@ def remove_experiment(eid):
 # Have to give file with experiment information and either leave id blank or give a number
 # get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
 #                             "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
-# get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
+get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
 # Adding experiments from a folder rather than individually
 # for fname in glob.glob(path + '\\*'):
 #     get_data_and_add_experiment(fname,)
