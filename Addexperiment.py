@@ -14,11 +14,13 @@ path = ""
 # Create function to pull all data from excel file, log in and add experiment
 # Also includes function to attach mutation data to an experiment
 
-
+# Only currently works for 1 experiment per entry, can in the future just have it loop through non empty entries
 # If there are multiple entries for a field, such as having multiple species in the experiment, these entries need to
 # be separated by a comma in the excel template file in order for them to be properly added
 
 # We need to update script so that you can also include a mutation file with it and that file joins the mutation field
+
+
 def get_data_and_add_experiment(file, mutfile =""):
 
     df = pd.read_excel(file, skiprows=4)
@@ -26,8 +28,8 @@ def get_data_and_add_experiment(file, mutfile =""):
     # Take each value that was included as part of the metadata and is not left blank
     val = df.loc[0, :].values.tolist()
     # Convert data to proper type for updating to database (making everything JSON serializable)
-    integer_fields = [3, 16, 17, 26, 27, 28, 29, 32, 33,38]
-    bool_fields = [8, 10, 12, 14, 19, 23, 40]
+    integer_fields = [3, 16, 17, 26, 27, 28, 29, 32, 33, 38]
+    bool_fields = [8, 10, 12, 14, 19, 23, 36]
     double_fields = [30]
     entry = 0
     while entry < len(val):
@@ -45,8 +47,19 @@ def get_data_and_add_experiment(file, mutfile =""):
     counter = 1
     while start < len(val)-3:
         if val[start] != '':
+            # update for new field of mutation data complete, field ids are tied to excel columns here so need to
+            # adjust value to the real id
+            # check to see if it is a new field that doesn't go in order, in this case the only one is field 47 which is
+            # column 36 in the template and is mutation data complete
+            if start == 36:
+                fielddict[str(47)] = {}
+                fielddict[str(47)] = {'new_' + str(counter): val[start]}
+                start += 1
+                continue
             fielddict[str(start)] = {}
-            if isinstance(val[start], str):
+            # We allow commas in some text fields like comments and major outcomes, even though this doesnt check for
+            # actual commas we just let this field go through, might need to update for 35 remarks as well in the future
+            if isinstance(val[start], str) and start != 34:
                 comma_check = re.split(";", val[start])
                 for element in comma_check:
                     fielddict[str(start)]['new_' + str(counter)] = element
@@ -55,8 +68,7 @@ def get_data_and_add_experiment(file, mutfile =""):
                 fielddict[str(start)] = {'new_' + str(counter): val[start]}
                 counter += 1
         start += 1
-    # print(fielddict)
-
+    print(fielddict)
     # Get Reference information
     pubmed_id = val[-2]
     if pubmed_id == "":
@@ -70,7 +82,6 @@ def get_data_and_add_experiment(file, mutfile =""):
     Field values key/value pairs that do not have a generated ID yet, use a
     random id that is prefixed with 'new_'.
     '''
-
     base_url = "https://cameldatabase.com/CAMEL/"
     api_url = base_url + "api"
     auth_url = base_url + "auth"
@@ -123,12 +134,10 @@ def get_data_and_add_experiment(file, mutfile =""):
             }
         ]
     }
-
     # Send the new experiment data
     # It will be added to the database
     # The JSON answer will be the same experiment, but with an assigned ID
     answer = req.post(exp_url, headers=auth_header, json=new_experiment).json()
-    print(answer)
     exp_id = answer['id']
     added_exp_url = exp_url + "/" + str(exp_id)
 
@@ -328,9 +337,9 @@ def add_mutation_to_experiment(mutation_file):
                 }
             resp = req.put(added_exp_url, headers=auth_header, json=attach_exp)
 
-    # After we run our script we remove the local version of the files
-    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
-    os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results_complete.xlsx")
+            # After we run our script we remove the local version of the files
+            os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results.xlsx")
+            os.remove("C:\\Users\\samue\\PycharmProjects\\Thesis\\Mutation_results_complete.xlsx")
 
 
 def remove_experiment(eid):
@@ -372,10 +381,10 @@ def remove_experiment(eid):
 # Have to give file with experiment information and either leave id blank or give a number
 # get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx',
 #                             "C:/Users/samue/Desktop/Thesis/42C.csv.xlsx")
-get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
+# get_data_and_add_experiment('C:/Users/samue/Desktop/Thesis/metadatatemplateUPDATE.xlsx')
 # Adding experiments from a folder rather than individually
 # for fname in glob.glob(path + '\\*'):
 #     get_data_and_add_experiment(fname,)
 #
-# add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx')
+# add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/22_42C.csv.xlsx')
 

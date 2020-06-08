@@ -8,6 +8,7 @@ import time
 from selenium import webdriver
 from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait as wait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -131,6 +132,8 @@ def cello2go(genes):
         # print(sequence)
         pyperclip.copy(sequence)
         paste_sequence.send_keys(Keys.CONTROL + "v")
+        browser.find_element_by_xpath("/html/body/center/div[5]/form[1]/table/thead/tr/td[2]/button/span[2]").click()
+        browser.find_element_by_xpath("/html/body/div[3]/ul/li[1]/label").click()
         submit_button = browser.find_element_by_id("do-blast")
         submit_button.click()
         time.sleep(9)
@@ -169,7 +172,7 @@ def cello2go(genes):
         browser.quit()
     return location_results
 
-# genes = locations("C:/Users/samue/Desktop/Thesis/35_42C.csv.xlsx")
-#
-# cello2go(genes)
+genes = locations("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/EnzymeProm3.csv.xlsx")
+
+cello2go(genes)
 

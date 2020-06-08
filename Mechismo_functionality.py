@@ -84,6 +84,7 @@ def run_mechismo(mutation_file):
             input_value = row["name_b1"] + ", " + str(row["mechDNA/RNA"])
         else:
             input_value = row["name_b1"] + ", " + str(row["mechProt"])
+        # This score could be a float instead
         total_score = str(row["mech"])
     # Have to add last entry
     camel_results.loc[index] = [input_tracker.split(" ")[1], input_value, total_score]
