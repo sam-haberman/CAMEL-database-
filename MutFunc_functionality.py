@@ -83,7 +83,7 @@ def extract_files(mut_func_file, mutation_data_frame):
     df = df.reset_index()
     columns_to_add = ["", "refaa", "altaa", "impact", "score", "ic", "ddg", "pdb_id", "sequence", "accession",
                       "modification_type", "site_function", "function_evidence", "predicted_kinase", "probability_loss",
-                      "knockout_pvalue", "tf"]
+                      "knockout_pvalue", "tf", "Category of Mutation"]
     df = df.reindex(columns=df.columns.tolist() + columns_to_add)
     zip_file_object = zipfile.ZipFile(mut_func_file, 'r')
     # Each file has a different header length so we will do each individually as well as different requirements of what
@@ -105,6 +105,10 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "function_evidence"] = p_sites_mutations.loc[index, "function_evidence"]
                 df.loc[rownumber, "predicted_kinase"] = p_sites_mutations.loc[index, "predicted_kinase"]
                 df.loc[rownumber, "probability_loss"] = p_sites_mutations.loc[index, "probability_loss"]
+                if df.loc[rownumber, "Category of Mutation"] != "":
+                    df.loc[rownumber, "Category of Mutation"].append(", Psites")
+                else:
+                    df.loc[rownumber, "Category of Mutation"] = "Psites"
             index += 1
     p_sites.close()
     # now we do start_stop
@@ -123,6 +127,10 @@ def extract_files(mut_func_file, mutation_data_frame):
                     df.loc[rownumber, "refaa"] = start_stop_mutations.loc[index, 6]
                     df.loc[rownumber, "altaa"] = start_stop_mutations.loc[index, 7]
                     df.loc[rownumber, "impact"] = start_stop_mutations.loc[index, 8]
+                    if df.loc[rownumber, "Category of Mutation"] != "":
+                        df.loc[rownumber, "Category of Mutation"].append(", Start_Stop")
+                    else:
+                        df.loc[rownumber, "Category of Mutation"] = "Start_Stop"
                 index += 1
     except:
         pass
@@ -141,6 +149,10 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "impact"] = interfaces_mutations.loc[index, "impact"]
                 df.loc[rownumber, "pdb_id"] = interfaces_mutations.loc[index, "pdb_id"]
                 df.loc[rownumber, "ddg"] = interfaces_mutations.loc[index, "ddg"]
+                if df.loc[rownumber, "Category of Mutation"] != "":
+                    df.loc[rownumber, "Category of Mutation"].append(", Interfaces")
+                else:
+                    df.loc[rownumber, "Category of Mutation"] = "Interfaces"
             index += 1
     interfaces.close()
     other_ptms = zip_file_object.open(zip_file_object.namelist()[3])
@@ -155,6 +167,10 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "altaa"] = other_ptms_mutations.loc[index, "altaa"]
                 df.loc[rownumber, "impact"] = other_ptms_mutations.loc[index, "impact"]
                 df.loc[rownumber, "modification_type"] = interfaces_mutations.loc[index, "modification_type"]
+                if df.loc[rownumber, "Category of Mutation"] != "":
+                    df.loc[rownumber, "Category of Mutation"].append(", Other_PTM")
+                else:
+                    df.loc[rownumber, "Category of Mutation"] = "Other_PTM"
             index += 1
     other_ptms.close()
     linear_motifs = zip_file_object.open(zip_file_object.namelist()[4])
@@ -170,6 +186,10 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "impact"] = linear_motifs_mutations.loc[index, "impact"]
                 df.loc[rownumber, "sequence"] = linear_motifs_mutations.loc[index, "sequence"]
                 df.loc[rownumber, "accession"] = linear_motifs_mutations.loc[index, "accession"]
+                if df.loc[rownumber, "Category of Mutation"] != "":
+                    df.loc[rownumber, "Category of Mutation"].append(", Linear_Motif")
+                else:
+                    df.loc[rownumber, "Category of Mutation"] = "Linear_Motif"
             index += 1
     linear_motifs.close()
     conservation = zip_file_object.open(zip_file_object.namelist()[5])
@@ -185,6 +205,10 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "impact"] = conservation_mutations.loc[index, "impact"]
                 df.loc[rownumber, "score"] = conservation_mutations.loc[index, "score"]
                 df.loc[rownumber, "ic"] = conservation_mutations.loc[index, "ic"]
+                if df.loc[rownumber, "Category of Mutation"] != "":
+                    df.loc[rownumber, "Category of Mutation"].append(", Conservation")
+                else:
+                    df.loc[rownumber, "Category of Mutation"] = "Conservation"
             index += 1
     conservation.close()
     stability = zip_file_object.open(zip_file_object.namelist()[6])
@@ -200,6 +224,10 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "impact"] = stability_mutations.loc[index, "impact"]
                 df.loc[rownumber, "pdb_id"] = stability_mutations.loc[index, "pdb_id"]
                 df.loc[rownumber, "ddg"] = stability_mutations.loc[index, "ddg"]
+                if df.loc[rownumber, "Category of Mutation"] != "":
+                    df.loc[rownumber, "Category of Mutation"].append(", Stability")
+                else:
+                    df.loc[rownumber, "Category of Mutation"] = "Stability"
             index += 1
     stability.close()
     tfbs = zip_file_object.open(zip_file_object.namelist()[7])
@@ -215,6 +243,10 @@ def extract_files(mut_func_file, mutation_data_frame):
                 df.loc[rownumber, "impact"] = tfbs_mutations.loc[index, "impact"]
                 df.loc[rownumber, "tf"] = tfbs_mutations.loc[index, "tf"]
                 df.loc[rownumber, "knockout_pvalue"] = tfbs_mutations.loc[index, "knockout_pvalue"]
+                if df.loc[rownumber, "Category of Mutation"] != "":
+                    df.loc[rownumber, "Category of Mutation"].append(", TFBS")
+                else:
+                    df.loc[rownumber, "Category of Mutation"] = "TFBS"
             index += 1
     tfbs.close()
     return df
@@ -229,7 +261,7 @@ def add_column_description():
     sheet = wb.ActiveSheet
     # add comments
     sheets = ["O1", "P1", "Q1", "R1", "S1", "T1", "U1", "V1", "W1", "X1", "Y1", "Z1", "AA1",
-              "AB1", "AC1", "AD1", "AE1", "AF1", "AG1", "AH1"]
+              "AB1", "AC1", "AD1", "AE1", "AF1", "AG1", "AH1", "AI1"]
     comments = ["Reference amino acid", "Mutated amino acid",
                 "Is the mutation predicted to impact function? '1' if yes, '0' if no",
                 "Sift score, any mutation with a score below 0.05 is considered deleterious ",
@@ -241,7 +273,7 @@ def add_column_description():
                 "Evidence of site function, if any", "Kinase predicted to lose phosphorylation at this site",
                 "Probability of kinase losing phosphorylation at this site",
                 "P-value of over or under-expression for the downstream gene when the transcription factor is knocked out",
-                "Transcription factor predicted to bind this binding site",
+                "Transcription factor predicted to bind this binding site", "Category of mutfunc mutation",
                 "protein-protein interactions: gene name of interactor, protein-chemical interactions: '[CHEM:type:id]'"
                 "DNA/RNA interactions: '[DNA/RNA]', Mechismo score for the interaction - The higher the Mechismo Score,"
                 " the more likely a particular mutation or modification is to affect interactions with other molecules."
