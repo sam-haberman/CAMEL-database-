@@ -295,8 +295,8 @@ def add_mutation_to_experiment(mutation_file):
     experiments = req.get("https://cameldatabase.com/CAMEL/api/experiment/" + eid).json()
     for key, value in experiments.get("fields").get("1").items():
         if "Escherichia coli" in value:
-            # check the strain of E. Coli, need to add Yeast or update so its more than just the E. Coli NC number
-            mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1', keep_default_na=False)
+            # check to see the organism, need to add Yeast or update so its more than just  E. Coli
+            mut_df = pd.read_excel(mutation_file, sheet_name='Sheet1', header=4, keep_default_na=False)
             mut_func_file = runmutfunc(mutation_file)
             updated_mutation_dataframe = extract_files(mut_func_file, mut_df)
             mechismo_results = run_mechismo(mutation_file)
@@ -386,5 +386,5 @@ def remove_experiment(eid):
 # for fname in glob.glob(path + '\\*'):
 #     get_data_and_add_experiment(fname,)
 #
-# add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/22_42C.csv.xlsx')
+add_mutation_to_experiment('C:/Users/samue/Desktop/Thesis/ALEDB_conversion/MergedExperimentstoUpdate/982_Atsumi S_2010.xlsx')
 

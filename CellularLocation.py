@@ -104,52 +104,43 @@ def cello2go(genes):
     location_results = pd.DataFrame(columns=cell2go_columns)
     updated = genes.split(">")[1:]
     for sequence in updated:
-        sequence = ">" + sequence
-        # Check to see if we did not find a gene name for our mutation and therefore we do not have a sequence
-        if "G" not in sequence:
-            continue
-        position = (sequence.split("\n"))[0].strip(" ")
-        if position == old_position:
-            continue
-        old_position = position
-        # first we open up our webpage
-        # This path needs to be where the chromedriver executable is stored
-        path = "C:/Users/samue/Desktop/Thesis/geckodriver/chromedriver.exe"
-        options = webdriver.ChromeOptions()
-        prefs = {
-            "download.default_directory": r"C:\Users\samue\PycharmProjects\Thesis",
-            "download.directory_upgrade": "true",
-            "download.prompt_for_download": "false",
-            "disable-popup-blocking": "true"
-        }
-        options.add_experimental_option("prefs", prefs)
-        browser = webdriver.Chrome(executable_path=path, service_log_path='nul', options=options)
-        browser.get("http://cello.life.nctu.edu.tw/cello2go/")
-        # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
-        paste_sequence = browser.find_element_by_name("sequence")
-        paste_sequence.clear()
-        # Testing why one did not work
-        # print(sequence)
-        pyperclip.copy(sequence)
-        paste_sequence.send_keys(Keys.CONTROL + "v")
-        browser.find_element_by_xpath("/html/body/center/div[5]/form[1]/table/thead/tr/td[2]/button/span[2]").click()
-        browser.find_element_by_xpath("/html/body/div[3]/ul/li[1]/label").click()
-        submit_button = browser.find_element_by_id("do-blast")
-        submit_button.click()
-        time.sleep(9)
-        location_values = []
-        int_values = []
-        # Scrape page
-        ele = browser.find_elements_by_xpath("//table[@id='Bacteria-gramn']")
-        for e in ele:
-            for td in e.find_elements_by_xpath(".//td"):
-                location_values.append(td.text)
-        # Update values from string to int to get max value
-        for i in location_values[1::2]:
-            int_values.append(float(i))
-        # sometimes it doesn't pull the values so we can try this again if it fails then pull values a second time
-        # just in case, testing this
-        if not int_values:
+        try:
+            sequence = ">" + sequence
+            # Check to see if we did not find a gene name for our mutation and therefore we do not have a sequence
+            if "G" not in sequence:
+                continue
+            position = (sequence.split("\n"))[0].strip(" ")
+            if position == old_position:
+                continue
+            old_position = position
+            # first we open up our webpage
+            # This path needs to be where the chromedriver executable is stored
+            path = "C:/Users/samue/Desktop/Thesis/geckodriver/chromedriver.exe"
+            options = webdriver.ChromeOptions()
+            prefs = {
+                "download.default_directory": r"C:\Users\samue\PycharmProjects\Thesis",
+                "download.directory_upgrade": "true",
+                "download.prompt_for_download": "false",
+                "disable-popup-blocking": "true"
+            }
+            options.add_experimental_option("prefs", prefs)
+            browser = webdriver.Chrome(executable_path=path, service_log_path='nul', options=options)
+            browser.get("http://cello.life.nctu.edu.tw/cello2go/")
+            # Then we clear the content and paste in our string of headers and FASTA sequences before running the search
+            paste_sequence = browser.find_element_by_name("sequence")
+            paste_sequence.clear()
+            # Testing why one did not work
+            # print(sequence)
+            pyperclip.copy(sequence)
+            paste_sequence.send_keys(Keys.CONTROL + "v")
+            browser.find_element_by_xpath("/html/body/center/div[5]/form[1]/table/thead/tr/td[2]/button/span[2]").click()
+            browser.find_element_by_xpath("/html/body/div[3]/ul/li[1]/label").click()
+            submit_button = browser.find_element_by_id("do-blast")
+            submit_button.click()
+            time.sleep(9)
+            location_values = []
+            int_values = []
+            # Scrape page
             ele = browser.find_elements_by_xpath("//table[@id='Bacteria-gramn']")
             for e in ele:
                 for td in e.find_elements_by_xpath(".//td"):
@@ -157,22 +148,35 @@ def cello2go(genes):
             # Update values from string to int to get max value
             for i in location_values[1::2]:
                 int_values.append(float(i))
-        if max(int_values) == int_values[0]:
-            mutation_location = "Extracellular"
-        elif max(int_values) == int_values[1]:
-            mutation_location = "Outermembrane"
-        elif max(int_values) == int_values[2]:
-            mutation_location = "Periplasmic"
-        elif max(int_values) == int_values[3]:
-            mutation_location = "Innermembrane"
-        else:
-            mutation_location = "Cytoplasmic"
-        location_results.loc[len(location_results)] = [float(position.split(" ")[1]), ",".join(location_values), str(mutation_location)]
-        browser.close()
-        browser.quit()
+            # sometimes it doesn't pull the values so we can try this again if it fails then pull values a second time
+            # just in case, testing this
+            if not int_values:
+                ele = browser.find_elements_by_xpath("//table[@id='Bacteria-gramn']")
+                for e in ele:
+                    for td in e.find_elements_by_xpath(".//td"):
+                        location_values.append(td.text)
+                # Update values from string to int to get max value
+                for i in location_values[1::2]:
+                    int_values.append(float(i))
+            if max(int_values) == int_values[0]:
+                mutation_location = "Extracellular"
+            elif max(int_values) == int_values[1]:
+                mutation_location = "Outermembrane"
+            elif max(int_values) == int_values[2]:
+                mutation_location = "Periplasmic"
+            elif max(int_values) == int_values[3]:
+                mutation_location = "Innermembrane"
+            else:
+                mutation_location = "Cytoplasmic"
+            location_results.loc[len(location_results)] = [float(position.split(" ")[1]), ",".join(location_values), str(mutation_location)]
+            browser.close()
+            browser.quit()
+        # just in case the sequence doesnt work this will then move on instead of stopping the program
+        except:
+            continue
     return location_results
 
-genes = locations("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/EnzymeProm3.csv.xlsx")
+# genes = locations("C:/Users/samue/Desktop/Thesis/ALEDB_conversion/Experiment_Data/EnzymeProm3.csv.xlsx")
 
-cello2go(genes)
+# cello2go(genes)
 
