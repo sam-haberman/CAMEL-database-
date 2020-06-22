@@ -3,7 +3,8 @@ Thesis scripts for 2019-2020 Bioinformatics Masters
 
 Consists of the five Python scripts used throughout the thesis as well as a Jupyter Notebook where some analysis is done on the collected data.
 
-AddExperiment.py - This is the wrap script that needs to run to work with CAMEL. Requires three other scripts to perform its functionality (CellularLocation.py, Mechismo_functionality.py, and MutFunc_functionality.py)
+## AddExperiment.py 
+This is the wrap script that needs to run to work with CAMEL. Requires three other scripts to perform its functionality (CellularLocation.py, Mechismo_functionality.py, and MutFunc_functionality.py)
 
 Consits of multiple functions to work is used to work with the CAMEL API and add/delete experiments and mutation data. The file consists of three main functions:
 
@@ -13,13 +14,15 @@ Consits of multiple functions to work is used to work with the CAMEL API and add
   
   add_mutation_to_experiment(mutation_file) - Given a mutation file that is named appropriately (experimentID_filename) will upload the mutation file to the matching experiment on CAMEL and perform analysis on the file by CELLO2GO, mutfunc and mechismo.
 
-CellularLocation.py - consists of two functions that take in a set of mutations in the CAMEL format and submit them one by one to CELLO2GO and return the respective subcellular locations of the targeted mutations. Can be run separately but the main design is to run in AddExperiment.py as part of adding mutation data to an experiment or creating an experiment with mutation data.
+## CellularLocation.py
+Consists of two functions that take in a set of mutations in the CAMEL format and submit them one by one to CELLO2GO and return the respective subcellular locations of the targeted mutations. Can be run separately but the main design is to run in AddExperiment.py as part of adding mutation data to an experiment or creating an experiment with mutation data.
 
   locations(file) - Takes in an excel mutation file (file) in the CAMEL format and returns a list of the fasta sequences for each mutation.
   
   cello2go(genes) - Goes through the given list of fasta sequences (genes) that is outputted by the locations function and collects the subcellular location one by one running the input through CELLO2GO
   
-MutFunc_functionality.py - consists of three functions that take in a set of mutations in the CAMEL format and submit them to mutfunc to get the ouput for these mutations. Can be run separately but the main design is to run in AddExperiment.py as part of adding mutation data to an experiment or creating an experiment with mutation data.
+## MutFunc_functionality.py
+Consists of three functions that take in a set of mutations in the CAMEL format and submit them to mutfunc to get the ouput for these mutations. Can be run separately but the main design is to run in AddExperiment.py as part of adding mutation data to an experiment or creating an experiment with mutation data.
 
   runmutfunc(file) - Takes in a excel file of mutations in the CAMEL format (file) and returns the output of the mutfunc results
   
@@ -27,11 +30,13 @@ MutFunc_functionality.py - consists of three functions that take in a set of mut
   
   add_column_description() - Adds comments to all the new columns created in MutFunc_functionality.py, CellularLocation.py and Mechismo_functionality.py to describe what information is in these new columns.
   
-  Mechismo_functionality.py - consists of one function that takes in a set of mutations in the CAMEL format and submits it to mechismo for the output for these mutations. Meant to be combined with CellularLocation.py and MutFunc_functionality.py in the AddExperiment.py scripts.
+## Mechismo_functionality.py
+  Consists of one function that takes in a set of mutations in the CAMEL format and submits it to mechismo for the output for these mutations. Meant to be combined with CellularLocation.py and MutFunc_functionality.py in the AddExperiment.py scripts.
   
     run_mechismo(mutation_file) - takes in a excel mutation file in the CAMEL format (mutation_file) and outputs a dataframe that is the original mutation information alongside the mechismo output.
   
-  AutomateMutationDAta.py is a script used to convert the mutation data from ALEdb to the desired CAMEL output in excel.
+## AutomateMutationDAta.py
+A script used to convert the mutation data from ALEdb to the desired CAMEL output in excel.
   
     Consists of two functions:
     
